@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c286ed8e8c815bd4ba2db5c9d1a74fc8, type: 3}
+  m_Name: ApiSettings
+  m_EditorClassIdentifier: 
+  isLogEnabled: 1
+  apiKey: 16d92e60-467e-4c51-92b7-c433753a12fb
+  hostUrl: https://games-banners.infomedia.digital/
+  registerDevice: /api/device
+  checkReady: /api/isready
+  getBanner: /api/banner
+  sendEvent: /api/event
