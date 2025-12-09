@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Plugins.RZDAds.Core.View;
+using UnityEngine;
 
 namespace Plugins.RZDAds
 {

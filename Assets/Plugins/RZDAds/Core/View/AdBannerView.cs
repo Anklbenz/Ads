@@ -4,8 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Plugins.RZDAds
-
+namespace Plugins.RZDAds.Core.View
 {
     public class AdBannerView : MonoBehaviour
     {
@@ -61,7 +60,7 @@ namespace Plugins.RZDAds
         {
             if (!_displayMap.TryGetValue(banner.Type, out IDisplay display))
             {
-                Debug.LogError($"Unknown banner type: {banner.Type}");
+                Debug.LogError($"[View] Unknown banner type: {banner.Type}");
                 return;
             }
 

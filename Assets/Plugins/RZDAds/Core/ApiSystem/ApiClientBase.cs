@@ -4,12 +4,14 @@
 using System;
 using System.Diagnostics;
 using Cysharp.Threading.Tasks;
+using Plugins.RZDAds.ApiSystem;
 using UnityEngine;
 
-namespace Plugins.RZDAds.ApiSystem
+namespace Plugins.RZDAds.Core.ApiSystem
 {
     public abstract class ApiClientBase
     {
+        private readonly ILogger _logger;
         private const long MIN_SUCCESS_WEB_REQUEST_CODE = 200;
         private const long MAX_SUCCESS_WEB_REQUEST_CODE = 299;
 
@@ -26,6 +28,11 @@ namespace Plugins.RZDAds.ApiSystem
         protected int maxRetries { get; set; } = 2;
 
         protected bool isLogEnabled { get; set; }
+
+        public ApiClientBase(ILogger logger = null)
+        {
+            _logger = logger;
+        }
 
 //----------------------------------------------File----------------------------------------------------------------------
         public async UniTask<bool> GetFileAsync(string fromUrl, string toPath, IProgress<float> progress = null)
@@ -182,16 +189,15 @@ namespace Plugins.RZDAds.ApiSystem
         private async UniTask<string> SendRequestAsync(RequestArgs requestArgs)
         {
             Stopwatch stopWatch = null;
-            if (isLogEnabled)
+            if (_logger != null)
                 stopWatch = Stopwatch.StartNew();
 
             var resultString = await _webRequest.Request(requestArgs);
 
             stopWatch?.Stop();
 
-            if (isLogEnabled)
-                UnityEngine.Debug.Log(
-                    $"[{_webRequest.responseCode}] {requestArgs.method.ToString().ToUpper()} {requestArgs.url} ->{stopWatch.ElapsedMilliseconds}ms");
+            _logger?.Log(
+                $"[ApiClient]({_webRequest.responseCode}) {requestArgs.method.ToString().ToUpper()} {requestArgs.url} ->{stopWatch.ElapsedMilliseconds}ms");
 
             return resultString;
         }

@@ -1,6 +1,6 @@
 
 using Cysharp.Threading.Tasks;
-using Plugins.RZDAds;
+using Plugins.RZDAds.Core;
 using UnityEngine;
 using UnityEngine.UI;
 

@@ -1,8 +1,9 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Plugins.RZDAds.ApiSystem;
 using UnityEngine;
 
-namespace Plugins.RZDAds.ApiSystem
+namespace Plugins.RZDAds.Core.ApiSystem
 {
     public class Api : ApiClientBase
     {
@@ -10,7 +11,7 @@ namespace Plugins.RZDAds.ApiSystem
 
         private string _token;
 
-        public Api(ApiSettings apiSettings)
+        public Api(ApiSettings apiSettings, ILogger logger = null) : base(logger)
         {
             _apiSettings = apiSettings;
             accessToken = apiSettings.AppKey;

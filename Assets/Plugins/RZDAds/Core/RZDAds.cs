@@ -1,61 +1,12 @@
 using System.Diagnostics;
-using UnityEngine;
 using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.ApiSystem;
+using Plugins.RZDAds.Core.ApiSystem;
+using Plugins.RZDAds.Core.View;
+using UnityEngine;
 
-namespace Plugins.RZDAds
+namespace Plugins.RZDAds.Core
 {
-    public class EventReporter
-    {
-        private readonly Api _api;
-
-        public EventReporter(Api api)
-        {
-            _api = api;
-        }
-
-        public async UniTask ReportShown(uint id, float duration)
-        {
-            await _api.ReportEvent(id, "show", duration);
-        }
-
-        public async UniTask ReportClicked(uint id)
-        {
-            await _api.ReportEvent(id, "click", 0);
-        }
-    }
-
-
-    public class Authenticator
-    {
-        private readonly Api _api;
-        private static IDeviceIdProvider _deviceIdProvider;
-
-        public bool IsAuthorized { get; private set; }
-
-        public Authenticator(Api api)
-        {
-            _api = api;
-            _deviceIdProvider = new DeviceIdService();
-        }
-
-        public async UniTask<bool> AuthorizeDevice()
-        {
-            var uniqueAppKey = _deviceIdProvider.GetDeviceId();
-            var registerResponse = await _api.RegisterDevice(uniqueAppKey, Application.platform);
-
-            if (!registerResponse.isDone || string.IsNullOrEmpty(registerResponse.data.token))
-                return false;
-
-            var token = registerResponse.data.token;
-
-            _api.SetAuthorizeToken(token);
-
-            IsAuthorized = true;
-            return true;
-        }
-    }
-
     public static class AdService
     {
         private const string API_SETTINGS = "ApiSettings";
@@ -68,52 +19,65 @@ namespace Plugins.RZDAds
 
         private static AdBannerView _view;
         private static bool _initialized;
+        private static bool _isInitializing;
         private static bool _isShowing;
+        private static ILogger _logger;
 
         public static async UniTask Initialize()
         {
-            if (_initialized)
+            if (_initialized || _isInitializing)
                 return;
+            _isInitializing = true;
+
+            _logger = new UnityLogger();
 
             var apiSettings = Resources.Load<ApiSettings>("ApiSettings");
-            _api = new Api(apiSettings);
+            _api = new Api(apiSettings, _logger);
 
-            _authenticator = new Authenticator(_api);
-            await _authenticator.AuthorizeDevice();
-
-            _contentProvider = new BannerContentProvider(_api);
-            _reporter = new EventReporter(_api);
-
+            _authenticator = new Authenticator(_api, new DeviceIdService(), _logger);
+            _contentProvider = new BannerContentProvider(_api, _logger);
+            _reporter = new EventReporter(_api, _logger);
+          
             _bannerFactory = new BannerFactory();
             _view = _bannerFactory.Get();
-
             Object.DontDestroyOnLoad(_view.gameObject);
 
+            var isOk = await _authenticator.AuthorizeDevice();
+            if (isOk)
+                _contentProvider.Init();
+
+            _isInitializing = false;
             _initialized = true;
         }
 
 
         public static async UniTask Show()
         {
-            var stopWatch = new Stopwatch();
-            UnityEngine.Debug.Log("Try Show");
+            _logger?.Log("[Ads] Try show ad");
             if (_isShowing)
                 return;
 
             _isShowing = true;
 
+            var stopWatch = new Stopwatch();
             try
             {
-                var isAuthorized = await CheckAuthorize();
-                UnityEngine.Debug.Log($"Device authorized: ({isAuthorized})");
+                var isAuthorized = await EnsureAuthorized();
+
                 if (!isAuthorized)
+                {
+                    _logger?.Log($"[Ads] Authorized isOk: ({false})");
                     return;
+                }
 
                 var canShow = await CheckCanShow();
 
-                UnityEngine.Debug.Log($"Server allow show: {canShow}");
+
                 if (!canShow)
+                {
+                    _logger?.Log($"[Ads] Server allow show: {false}");
                     return;
+                }
 
                 var content = _contentProvider.Take();
 
@@ -137,17 +101,18 @@ namespace Plugins.RZDAds
         private static async UniTask Report(uint id, bool isClick, float duration)
         {
             await _reporter.ReportShown(id, duration);
-            UnityEngine.Debug.Log($"Is Clicked: ({isClick})");
 
             if (isClick)
                 await _reporter.ReportClicked(id);
         }
 
-        private static async UniTask<bool> CheckAuthorize()
+        private static async UniTask<bool> EnsureAuthorized()
         {
             if (_authenticator.IsAuthorized)
                 return true;
-            return await _authenticator.AuthorizeDevice();
+
+            var ok = await _authenticator.AuthorizeDevice();
+            return ok;
         }
 
         private static async UniTask<bool> CheckCanShow()
@@ -158,14 +123,30 @@ namespace Plugins.RZDAds
         }
 
 
+        /*public static async UniTask<bool> IsReady()
+        {
+            if (!_initialized || !_contentProvider.IsReady)
+                return false;
+
+            return await CheckCanShow();
+        }*/
+
         public static void Dispose()
         {
-            Object.Destroy(_view.gameObject);
+            if (_view != null)
+                UnityEngine.Object.Destroy(_view.gameObject);
+
             _view = null;
             _api = null;
             _bannerFactory = null;
             _authenticator = null;
+            _contentProvider = null;
+            _reporter = null;
+            _isShowing = false;
             _initialized = false;
+            _isInitializing = false;
+
+            _logger?.Log("AdService disposed");
         }
     }
 }
