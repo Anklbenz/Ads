@@ -53,7 +53,7 @@ namespace Plugins.RZDAds.Core
             }
         }
 
-        public BannerContent Take()
+        public BannerContent TakeBanner()
         {
             if (!_prepared.TryDequeue(out var content))
             {
