@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,11 +13,18 @@ namespace Plugins.RZDAds
         [SerializeField] private VideoPlayer player;
         [SerializeField] private RawImage rawImage;
 
+        [SerializeField] private Button muteButton;
+        [SerializeField] private Sprite muteSprite;
+        [SerializeField] private Sprite unmuteSprite;
+        [SerializeField] private Image muteImage;
+        private bool _isMuted;
+
         public void Set(BannerContent banner)
         {
             player.url = banner.VideoUrl;
             player.renderMode = VideoRenderMode.APIOnly;
             PrepareAndPlay().Forget();
+            Unmute();
         }
 
         private async UniTask PrepareAndPlay()
@@ -33,6 +41,29 @@ namespace Plugins.RZDAds
             player.Play();
         }
 
+        private void ToggleMuted()
+        {
+            _isMuted = !_isMuted;
+            if (!_isMuted)
+                Unmute();
+            else
+                Mute();
+        }
+
+        private void Mute()
+        {
+            player.SetDirectAudioVolume(0, 0f);
+            muteImage.sprite = muteSprite;
+            _isMuted = true;
+        }
+
+        private void Unmute()
+        {
+            player.SetDirectAudioVolume(0, 1f);
+            muteImage.sprite = unmuteSprite;
+            _isMuted = false;
+        }
+
         public void Clear()
         {
             player.Stop();
@@ -40,13 +71,19 @@ namespace Plugins.RZDAds
         }
 
         public void Open()
-        {
-            gameObject.SetActive(true);
-        }
+            => gameObject.SetActive(true);
 
         public void Close()
+            => gameObject.SetActive(false);
+
+        private void OnEnable()
         {
-            gameObject.SetActive(false);
+            muteButton.onClick.AddListener(ToggleMuted);
+        }
+
+        private void OnDisable()
+        {
+            muteButton.onClick.RemoveListener(ToggleMuted);
         }
     }
 }
