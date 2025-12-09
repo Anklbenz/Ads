@@ -29,7 +29,7 @@ namespace Plugins.RZDAds.Core
             if (_initialized || _isInitializing)
                 return;
             _isInitializing = true;
-            
+
             // Logger можно не создавать тогда логгирования не будет
             _logger = new UnityLogger();
 
@@ -41,9 +41,9 @@ namespace Plugins.RZDAds.Core
             //authenticator генерит уникальный ключ устройства и авторизует приложение
             //Все ручки в Api должны быть подписаны ключом полученные при авторизации
             _authenticator = new Authenticator(_api, new DeviceIdService(), _logger);
-            
+
             //Скачивает и хранит Json с баннером отдает по требованию, докачивает новые
-            _contentProvider = new BannerContentProvider(_api, _logger);
+            _contentProvider = new BannerContentProvider(_api, 2, _logger);
             //Шлет события
             _reporter = new EventReporter(_api, _logger);
             //Создаем View
@@ -82,7 +82,6 @@ namespace Plugins.RZDAds.Core
                 }
 
                 var canShow = await CheckCanShow();
-                
                 if (!canShow)
                 {
                     _logger?.Log($"[Ads] Server allow show: {false}");
@@ -107,6 +106,7 @@ namespace Plugins.RZDAds.Core
                 _isShowing = false;
             }
         }
+
         // Открываем Url рекламы 
         private static void OpenUrl(string url)
         {
@@ -122,6 +122,7 @@ namespace Plugins.RZDAds.Core
             if (isClick)
                 await _reporter.ReportClicked(id);
         }
+
         // Если авторизован возвращает true, если нет пробует и возвращает результат
         private static async UniTask<bool> EnsureAuthorized()
         {
@@ -131,6 +132,7 @@ namespace Plugins.RZDAds.Core
             var ok = await _authenticator.AuthorizeDevice();
             return ok;
         }
+
         // Сервер разрешает показ не чаще какого-то времени, сервер знает это время 
         // Проверка можно ли показать, сервер отвечает да/нет 
         private static async UniTask<bool> CheckCanShow()

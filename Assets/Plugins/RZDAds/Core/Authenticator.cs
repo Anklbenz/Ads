@@ -22,6 +22,7 @@ namespace Plugins.RZDAds.Core
         public async UniTask<bool> AuthorizeDevice()
         {
             var uniqueAppKey = _deviceIdProvider.GetDeviceId();
+            _logger.Log($"[clientKey]{uniqueAppKey}");
             var registerResponse = await _api.RegisterDevice(uniqueAppKey, Application.platform);
             _logger?.Log($"[Authenticator] Login isOk: {registerResponse.isDone}");
             if (!registerResponse.isDone || string.IsNullOrEmpty(registerResponse.data.token))

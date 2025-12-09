@@ -22,65 +22,80 @@ namespace Plugins.RZDAds.Core
 
     public class BannerContentProvider
     {
-        private const int BUFFER = 2;
+        private const int PREWARM_RETRIES = 5;
+        private const int PREWARM_DELAY = 300;
         private readonly Api _api;
         private readonly ILogger _logger;
+
+        //очередь баннеров
         private readonly Queue<BannerContent> _prepared = new();
+        private readonly int _bannerBufferSize;
         private bool _isLoading;
+        private bool _isInitialized;
 
-        public bool IsReady => _prepared.Count > 0;
+        public bool HasBanner => _prepared.Count > 0;
 
-        public BannerContentProvider(Api api, ILogger logger = null)
+        public BannerContentProvider(
+            Api api,
+            int bannerBufferSize = 2,
+            ILogger logger = null)
         {
             _api = api;
+            _bannerBufferSize = bannerBufferSize;
             _logger = logger;
         }
 
         public void Init()
         {
+            if (_isInitialized)
+                return;
+            _isInitialized = true;
             Prewarm().Forget();
+        }
+
+        public BannerContent TakeBanner()
+        {
+            // Пытаемся достать баннер и запускаем подогрев буфера
+            // Если банера нет, то return null
+            _prepared.TryDequeue(out var content);
+
+            Prewarm().Forget();
+
+            return content;
         }
 
         private async UniTask Prewarm()
         {
             //retires на случай если loadNext ничего не отдаст (напр ошибка сервера) цикл будет вечным
             //retries 5 раз попробует и все
-            int retries = 5;
-            while (_prepared.Count < BUFFER && retries > 0)
+            int retries = PREWARM_RETRIES;
+            while (_prepared.Count < _bannerBufferSize && retries > 0)
             {
+                int itemsBefore = _prepared.Count;
                 await LoadNext();
+
+                // Только Если загрузить не удалось, ждём перед следующей попыткой
+                if (itemsBefore == _prepared.Count)
+                    await UniTask.Delay(PREWARM_DELAY);
                 retries--;
             }
         }
 
-        public BannerContent TakeBanner()
-        {
-            if (!_prepared.TryDequeue(out var content))
-            {
-                LoadNext().Forget();
-                return null;
-            }
-
-            if (_prepared.Count < BUFFER)
-                LoadNext().Forget();
-            return content;
-        }
-
         private async UniTask LoadNext()
         {
-            if (_isLoading || _prepared.Count >= BUFFER)
+            if (_isLoading)
                 return;
-            _logger?.Log("[ContentProvider] Start loading");
+
             _isLoading = true;
 
             try
             {
                 var response = await _api.GetBanner();
-                _logger?.Log($"[ContentProvider] Banner received isOk: {response.isDone}");
+
                 var banner = response.data?.data;
                 if (!response.isDone || banner == null)
                     return;
-             
+
                 var content = await BuildContent(banner.banner);
 
                 if (content != null)
