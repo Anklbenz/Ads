@@ -8,10 +8,8 @@ namespace Plugins.RZDAds.Core.View
 {
     public class AdBannerView : MonoBehaviour
     {
-        [SerializeField] private GameObject content;
-
-        [SerializeField] private Button closeButton;
         [SerializeField] private Button openAdButton;
+        [SerializeField] private Button closeButton;
         [SerializeField] private TMP_Text description;
         [SerializeField] private Timer timer;
         [SerializeField] private VideoDisplay videoDisplay;
@@ -25,28 +23,37 @@ namespace Plugins.RZDAds.Core.View
         {
             _tcs = new UniTaskCompletionSource<bool>();
 
+            gameObject.SetActive(true);
             SetupContent(banner);
-
-            content.SetActive(true);
 
             timer.gameObject.SetActive(true);
             closeButton.gameObject.SetActive(false);
 
-            await UpdateProgress(banner.Duration);
+            var timerTask = UpdateProgress(banner.Duration);
 
-            timer.gameObject.SetActive(false);
-            closeButton.gameObject.SetActive(true);
+            var firstCompletedTaskIndex = await UniTask.WhenAny(timerTask, _tcs.Task);
 
-            var isClickOnAd = await _tcs.Task;
+            bool clickOrClose;
+
+            if (firstCompletedTaskIndex == 0)
+            {
+                timer.gameObject.SetActive(false);
+                closeButton.gameObject.SetActive(true);
+
+                clickOrClose = await _tcs.Task;
+            }
+            else
+            {
+                clickOrClose = true;
+            }
 
             Hide();
-
-            return isClickOnAd;
+            return clickOrClose;
         }
 
         private void Hide()
         {
-            content.SetActive(false);
+            gameObject.SetActive(false);
             foreach (var display in _displayMap.Values)
             {
                 display.Clear();
@@ -61,6 +68,7 @@ namespace Plugins.RZDAds.Core.View
             if (!_displayMap.TryGetValue(banner.Type, out IDisplay display))
             {
                 Debug.LogError($"[View] Unknown banner type: {banner.Type}");
+                _tcs.TrySetResult(false);
                 return;
             }
 
@@ -79,7 +87,11 @@ namespace Plugins.RZDAds.Core.View
             float elapsed = 0f;
             while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
+                //Если кликнули, завершить таймер 
+                if (_tcs.Task.Status == UniTaskStatus.Succeeded)
+                    break;
+
+                elapsed += Time.unscaledDeltaTime;
                 timer.SetProgress(Mathf.Clamp01(elapsed / duration));
                 timer.SetSeconds(Mathf.CeilToInt(duration - elapsed));
 

@@ -37,7 +37,7 @@ namespace Plugins.RZDAds.Core
             _authenticator = new Authenticator(_api, new DeviceIdService(), _logger);
             _contentProvider = new BannerContentProvider(_api, _logger);
             _reporter = new EventReporter(_api, _logger);
-          
+
             _bannerFactory = new BannerFactory();
             _view = _bannerFactory.Get();
             Object.DontDestroyOnLoad(_view.gameObject);
@@ -90,12 +90,18 @@ namespace Plugins.RZDAds.Core
 
                 await Report(content.Id, isClick, (float)stopWatch.Elapsed.TotalSeconds);
                 if (isClick)
-                    Application.OpenURL(content.Url);
+                    OpenUrl(content.Url);
             }
             finally
             {
                 _isShowing = false;
             }
+        }
+
+        private static void OpenUrl(string url)
+        {
+            _logger?.Log($"[Ads] Try open url {url}");
+            Application.OpenURL(url);
         }
 
         private static async UniTask Report(uint id, bool isClick, float duration)

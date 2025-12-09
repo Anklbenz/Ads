@@ -9,6 +9,16 @@ namespace Plugins.RZDAds
         [SerializeField] private Image image;
         [SerializeField] private TMP_Text text;
 
+        public void Show()
+        {
+            gameObject.SetActive(true);
+        }
+
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+        }
+
         public void SetProgress(float progress)
         {
             image.fillAmount = progress;
