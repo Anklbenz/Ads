@@ -1,11 +1,9 @@
-﻿using System;
-using Cysharp.Threading.Tasks;
-using Plugins.RZDAds.Core;
+﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Plugins.RZDAds
+namespace Plugins.RZDAds.Core.View
 {
     public class VideoDisplay : MonoBehaviour, IDisplay
     {

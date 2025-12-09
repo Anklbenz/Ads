@@ -22,7 +22,7 @@ namespace Plugins.RZDAds.Core
 
     public class BannerContentProvider
     {
-        private const int BUFFER = 1;
+        private const int BUFFER = 2;
         private readonly Api _api;
         private readonly ILogger _logger;
         private readonly Queue<BannerContent> _prepared = new();
@@ -112,7 +112,7 @@ namespace Plugins.RZDAds.Core
                     Title = banner.title,
                     Description = banner.description,
                     Url = banner.link,
-                    Duration = /*settings?.duration ?? 10*/10,
+                    Duration = settings?.duration ?? 5,
                     VideoUrl = media.url
                 };
 

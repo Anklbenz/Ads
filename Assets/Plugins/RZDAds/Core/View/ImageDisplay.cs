@@ -1,8 +1,7 @@
-﻿using Plugins.RZDAds.Core;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace Plugins.RZDAds
+namespace Plugins.RZDAds.Core.View
 {
     public interface IDisplay
     {
