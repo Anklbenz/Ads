@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
+namespace Plugins.RZDAds.Example
+{
 	public class GUILog : MonoBehaviour {
 		[SerializeField] private int fontSize = 17, messagesCount = 100;
 		[SerializeField] private Color color = Color.yellow;
@@ -24,8 +26,8 @@ using UnityEngine;
 
 		private GUIStyle CreateStyle() {
 			return new GUIStyle {
-					fontSize = fontSize,
-					normal = {textColor = color}
+				fontSize = fontSize,
+				normal = {textColor = color}
 			};
 		}
 
@@ -43,3 +45,4 @@ using UnityEngine;
 			GUILayout.EndArea();
 		}
 	}
+}
