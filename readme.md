@@ -22,7 +22,7 @@ https://github.com/Anklbenz/Ads.git?path=Assets/Plugins/RZDAds
 ```json
 "dependencies": {
   "com.unity.textmeshpro": "3.0.6"
-}
+}```
 
 
 2. ** UniTask (async/await интеграция)**
