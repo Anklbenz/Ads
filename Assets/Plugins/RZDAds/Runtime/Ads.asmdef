@@ -1,0 +1,8 @@
+{
+  "name": "RZDAds.Runtime",
+"autoReferenced": true,
+  "references": [
+    "UniTask",
+    "Unity.TextMeshPro"
+  ]
+}
