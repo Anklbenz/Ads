@@ -111,6 +111,10 @@ namespace Plugins.RZDAds.Core.View
 
         private void OnEnable()
         {
+            //Придурки в играх бывают подписываться на все кнопки в FindObjectByType
+            closeButton.onClick.RemoveAllListeners();
+            openAdButton.onClick.RemoveAllListeners();
+            //
             closeButton.onClick.AddListener(OnClose);
             openAdButton.onClick.AddListener(OnAdOpen);
         }
