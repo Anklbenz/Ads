@@ -17,13 +17,7 @@ https://github.com/Anklbenz/Ads.git?path=Assets/Plugins/RZDAds
 Для корректной работы пакета необходимы следующие зависимости:
 
 1. **Unity TextMeshPro** (версия 3.0.6 и выше)  
-   Unity подтянет автоматически:
-
-```json
-"dependencies": {
-  "com.unity.textmeshpro": "3.0.6"
-}```
-
+   Если в проекте нет Unity подтянет автоматически
 
 2. ** UniTask (async/await интеграция)**
 Установите через Git URL:
