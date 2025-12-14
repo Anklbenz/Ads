@@ -1,4 +1,4 @@
-# RZD Ads SDK
+# RZD Ads
 **RZD Ads** — пакет для интеграции рекламных модулей в Unity-проекты.  
 
 ### Установка Через Git URL
@@ -19,10 +19,10 @@ UniTask используется для асинхронных операций 
 `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
 
 ## Структура пакета
-RZDAds/
-package.json      # Описание пакета (name, version, dependencies)
-Runtime/          # Скрипты SDK
-Samples~/         # Примеры использования
+- RZDAds/
+- package.json      # Описание пакета (name, version, dependencies)
+- Runtime/          # Скрипты SDK
+- Samples~/         # Примеры использования
 
 ## Использование
 1. Импортируйте пакет через Git URL
