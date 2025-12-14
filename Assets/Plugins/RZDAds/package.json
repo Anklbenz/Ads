@@ -1,0 +1,9 @@
+{
+  "name": "com.rzd.ads",
+  "displayName": "RZD Ads SDK",
+  "version": "1.0.0",
+  "unity": "2021.3",
+  "dependencies": {
+    "com.unity.textmeshpro": "3.0.6"
+  }
+}
