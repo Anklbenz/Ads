@@ -15,13 +15,14 @@
 UniTask используется для асинхронных операций внутри RZD Ads SDK.
 
 Установите через Git URL:
+
 `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
 
 ## Структура пакета
 RZDAds/
-├── package.json      # Описание пакета (name, version, dependencies)
-├── Runtime/          # Скрипты SDK
-└── Samples~/         # Примеры использования
+package.json      # Описание пакета (name, version, dependencies)
+Runtime/          # Скрипты SDK
+Samples~/         # Примеры использования
 
 ## Использование
 1. Импортируйте пакет через Git URL
