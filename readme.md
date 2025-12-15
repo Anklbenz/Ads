@@ -3,6 +3,7 @@
 
 ### Установка Через Git URL
 Добавьте пакет в Unity через **Package Manager → Add package from Git URL**:
+
 `https://github.com/Anklbenz/Ads.git?path=Assets/Plugins/RZDAds`
 
 ## Зависимости
