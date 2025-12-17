@@ -102,10 +102,6 @@ namespace Plugins.RZDAds.Runtime.Scripts
                 stopWatch.Start();
                 var isClick = await _view.Show(content);
                 stopWatch.Stop();
-                
-                _logger?.Log($"[Ads] Click on banner: {isClick}");
-                if (isClick)
-                    OpenUrl(content.Url);
 
                 await Report(content.Id, isClick, (float)stopWatch.Elapsed.TotalSeconds);
             }
@@ -113,13 +109,6 @@ namespace Plugins.RZDAds.Runtime.Scripts
             {
                 _isShowing = false;
             }
-        }
-
-        // Открываем Url рекламы 
-        private static void OpenUrl(string url)
-        {
-            _logger?.Log($"[Ads] Attempt open ads url: {url}");
-            Application.OpenURL(url);
         }
 
         //Отправка отчета, класс Reporter (нажали или закрыли + длительность просмотра)

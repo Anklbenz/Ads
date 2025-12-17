@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -16,44 +17,46 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         [SerializeField] private VideoDisplay videoDisplay;
         [SerializeField] private ImageDisplay imageDisplay;
 
-        private UniTaskCompletionSource<bool> _tcs;
+        private UniTaskCompletionSource _tcs;
+        private CancellationTokenSource _cts;
         private Dictionary<string, IDisplay> _displayMap;
         private IDisplay _currentDisplay;
+        
+        private bool _clicked;
+        private string _bannerUrl;
 
-        public async UniTask<bool> Show(BannerContent banner, Action onClick = null )
+
+        public async UniTask<bool> Show(BannerContent banner)
         {
-            _tcs = new UniTaskCompletionSource<bool>();
-
+            _tcs = new UniTaskCompletionSource();
+            _cts = new CancellationTokenSource();
+            _clicked = false;
+            _bannerUrl = banner.Url;
+           
+            //Открываем
             gameObject.SetActive(true);
+
             //Настраиваем контент согласно пришедшим данным
             SetupContent(banner);
-            
-            
+
             timer.Show();
             closeButton.gameObject.SetActive(false);
-            
-            //Таск таймера
-            var timerTask = UpdateProgress(banner.Duration);
-            //что раньше таймер или клик
-            var firstCompletedTaskIndex = await UniTask.WhenAny(timerTask, _tcs.Task);
 
-            bool clickOrClose;
-            //Если таймер вышел раньше
-            if (firstCompletedTaskIndex == 0)
+            //Таск таймера
+            try
             {
-                //показываем крестик открыть баннер
-                timer.Hide();
-                closeButton.gameObject.SetActive(true);
-                 
-                clickOrClose = await _tcs.Task;
+                await UpdateProgress(banner.Duration, _cts.Token);
             }
-            else
-            {
-                clickOrClose = true;
-            }
+            catch (OperationCanceledException) { }
+
+            timer.Hide();
+            closeButton.gameObject.SetActive(true);
+            
+            //Таск нажатия на крестик
+            await _tcs.Task;
 
             Hide();
-            return clickOrClose;
+            return _clicked;
         }
 
         private void Hide()
@@ -72,8 +75,10 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         {
             if (!_displayMap.TryGetValue(banner.Type, out IDisplay display))
             {
-                Debug.LogError($"[View] Unknown banner type: {banner.Type}");
-                _tcs.TrySetResult(false);
+                Debug.LogError($"[View] Cannot show banner: unknown type {banner.Type}");
+                _cts?.Cancel();
+                _tcs?.TrySetResult();
+                Hide();
                 return;
             }
 
@@ -87,15 +92,13 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             timer.SetSeconds(banner.Duration);
         }
 
-        private async UniTask UpdateProgress(float duration)
+        private async UniTask UpdateProgress(float duration, CancellationToken token)
         {
             float elapsed = 0f;
             while (elapsed < duration)
             {
-                //Если кликнули, завершить таймер 
-                if (_tcs.Task.Status == UniTaskStatus.Succeeded)
-                    break;
-
+                token.ThrowIfCancellationRequested();
+                
                 elapsed += Time.unscaledDeltaTime;
                 timer.SetProgress(Mathf.Clamp01(elapsed / duration));
                 timer.SetSeconds(Mathf.CeilToInt(duration - elapsed));
@@ -109,10 +112,13 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 
 
         private void OnClose()
-            => _tcs.TrySetResult(false);
+            => _tcs?.TrySetResult();
 
-        private void OnAdOpen()
-            => _tcs.TrySetResult(true);
+        private void OnAdClick()
+        {
+            _clicked = true;
+            Application.OpenURL(_bannerUrl);
+        }
 
         private void OnEnable()
         {
@@ -121,13 +127,13 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             openAdButton.onClick.RemoveAllListeners();
             //
             closeButton.onClick.AddListener(OnClose);
-            openAdButton.onClick.AddListener(OnAdOpen);
+            openAdButton.onClick.AddListener(OnAdClick);
         }
 
         private void OnDisable()
         {
             closeButton.onClick.RemoveListener(OnClose);
-            openAdButton.onClick.RemoveListener(OnAdOpen);
+            openAdButton.onClick.RemoveListener(OnAdClick);
         }
 
         private void Awake()
