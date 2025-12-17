@@ -2,7 +2,7 @@
   "name": "RZDAds.Runtime",
 "autoReferenced": true,
   "references": [
-    "UniTask",
-    "Unity.TextMeshPro"
+    "com.cysharp.unitask",
+    "com.unity.textmeshpro"
   ]
 }
