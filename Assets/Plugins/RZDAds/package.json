@@ -7,6 +7,6 @@
   "description": "Пакет для интеграции рекламы в Unity-проекты РЖД",
   "dependencies": {
     "com.unity.textmeshpro": "3.0.6",
-     "com.cysharp.unitask" : "2.5.10"
+    "com.cysharp.unitask": ""
   }
 }
