@@ -1,8 +1,8 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
-using Plugins.RZDAds.Core.ApiSystem;
+using Plugins.RZDAds.Runtime.Scripts.ApiSystem;
 
-namespace Plugins.RZDAds.Core
+namespace Plugins.RZDAds.Runtime.Scripts
 {
     public class EventReporter
     {

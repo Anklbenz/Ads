@@ -1,4 +1,4 @@
-﻿namespace Plugins.RZDAds.Core
+﻿namespace Plugins.RZDAds.Runtime.Scripts
 {
     public interface ILogger
     {

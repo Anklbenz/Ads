@@ -1,7 +1,7 @@
-﻿using Plugins.RZDAds.Core.View;
+﻿using Plugins.RZDAds.Runtime.Scripts.View;
 using UnityEngine;
 
-namespace Plugins.RZDAds
+namespace Plugins.RZDAds.Runtime.Scripts
 {
     public class BannerFactory
     {

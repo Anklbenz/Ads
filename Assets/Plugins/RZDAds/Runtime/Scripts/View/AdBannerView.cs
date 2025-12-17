@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Plugins.RZDAds.Core.View
+namespace Plugins.RZDAds.Runtime.Scripts.View
 {
     public class AdBannerView : MonoBehaviour
     {
@@ -19,27 +20,31 @@ namespace Plugins.RZDAds.Core.View
         private Dictionary<string, IDisplay> _displayMap;
         private IDisplay _currentDisplay;
 
-        public async UniTask<bool> Show(BannerContent banner)
+        public async UniTask<bool> Show(BannerContent banner, Action onClick = null )
         {
             _tcs = new UniTaskCompletionSource<bool>();
 
             gameObject.SetActive(true);
+            //Настраиваем контент согласно пришедшим данным
             SetupContent(banner);
-
-            timer.gameObject.SetActive(true);
+            
+            
+            timer.Show();
             closeButton.gameObject.SetActive(false);
-
+            
+            //Таск таймера
             var timerTask = UpdateProgress(banner.Duration);
-
+            //что раньше таймер или клик
             var firstCompletedTaskIndex = await UniTask.WhenAny(timerTask, _tcs.Task);
 
             bool clickOrClose;
-
+            //Если таймер вышел раньше
             if (firstCompletedTaskIndex == 0)
             {
-                timer.gameObject.SetActive(false);
+                //показываем крестик открыть баннер
+                timer.Hide();
                 closeButton.gameObject.SetActive(true);
-
+                 
                 clickOrClose = await _tcs.Task;
             }
             else

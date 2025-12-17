@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.ApiSystem;
-using Plugins.RZDAds.Core.ApiSystem;
+using Plugins.RZDAds.Runtime.Scripts.ApiSystem;
 using UnityEngine;
 
-namespace Plugins.RZDAds.Core
+namespace Plugins.RZDAds.Runtime.Scripts
 {
     public class BannerContent
     {
@@ -23,7 +23,7 @@ namespace Plugins.RZDAds.Core
     public class BannerContentProvider
     {
         private const int PREWARM_RETRIES = 5;
-        private const int PREWARM_DELAY = 300;
+        private const int PREWARM_DELAY_MILLISECONDS = 1000;
         private readonly Api _api;
         private readonly ILogger _logger;
 
@@ -64,6 +64,7 @@ namespace Plugins.RZDAds.Core
             return content;
         }
 
+        //Поддержание буфера с объявлений полным
         private async UniTask Prewarm()
         {
             //retires на случай если loadNext ничего не отдаст (напр ошибка сервера) цикл будет вечным
@@ -74,9 +75,9 @@ namespace Plugins.RZDAds.Core
                 int itemsBefore = _prepared.Count;
                 await LoadNext();
 
-                // Только Если загрузить не удалось, ждём перед следующей попыткой
+                // Только Если загрузить не удалось, delay перед следующей попыткой
                 if (itemsBefore == _prepared.Count)
-                    await UniTask.Delay(PREWARM_DELAY);
+                    await UniTask.Delay(PREWARM_DELAY_MILLISECONDS);
                 retries--;
             }
         }
@@ -95,7 +96,7 @@ namespace Plugins.RZDAds.Core
                 var banner = response.data?.data;
                 if (!response.isDone || banner == null)
                     return;
-
+                //Mapping json контента в контент для показа + загрузка Texture 
                 var content = await BuildContent(banner.banner);
 
                 if (content != null)

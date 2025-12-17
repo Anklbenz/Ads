@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Plugins.RZDAds.Core.View
+namespace Plugins.RZDAds.Runtime.Scripts.View
 {
     public class VideoDisplay : MonoBehaviour, IDisplay
     {

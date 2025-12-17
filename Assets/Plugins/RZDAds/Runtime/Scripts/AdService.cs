@@ -1,15 +1,17 @@
+//@Anklbenz8
+
 using System.Diagnostics;
 using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.ApiSystem;
-using Plugins.RZDAds.Core.ApiSystem;
-using Plugins.RZDAds.Core.View;
+using Plugins.RZDAds.Runtime.Scripts.ApiSystem;
+using Plugins.RZDAds.Runtime.Scripts.View;
 using UnityEngine;
 
-namespace Plugins.RZDAds.Core
+namespace Plugins.RZDAds.Runtime.Scripts
 {
     public static class AdService
     {
-        private const string API_SETTINGS = "ApiSettings";
+        private const string API_SETTINGS_RESOURES_PATH = "ApiSettings";
 
         private static Api _api;
         private static BannerFactory _bannerFactory;
@@ -23,37 +25,42 @@ namespace Plugins.RZDAds.Core
         private static bool _isShowing;
         private static ILogger _logger;
 
-        // Метод нужно вызвать при старте приложения 
-        public static async UniTask Initialize()
+        // Метод нужно вызвать при старте клиентского приложения 
+        // appToken - уникальный ключ игры, logRequired нужен ли лог
+        public static async UniTask Initialize(string appToken, bool logRequired = true)
         {
             if (_initialized || _isInitializing)
                 return;
             _isInitializing = true;
 
-            // Logger можно не создавать тогда логгирования не будет
-            _logger = new UnityLogger();
+            // Logger можно не создавать тогда логирования не будет
+            _logger = logRequired
+                ? new UnityLogger()
+                : null;
 
-            //  apiSettings все ручки host и проч для REST
-            var apiSettings = Resources.Load<ApiSettings>("ApiSettings");
+            //apiSettings все ручки, host и проч конфиг для для REST
+            var apiSettings = Resources.Load<ApiSettings>(API_SETTINGS_RESOURES_PATH);
             //api - REST клиент выполняет все запросы
             _api = new Api(apiSettings, _logger);
+            //Ключ приложения нужен в Header каждого запроса 
+            _api.ApplyAppToken(appToken);
 
             //authenticator генерит уникальный ключ устройства и авторизует приложение
-            //Все ручки в Api должны быть подписаны ключом полученные при авторизации
+            //Все запросы в Api должны содержать в Body ключ полученный при авторизации, иначе сервак не примет
             _authenticator = new Authenticator(_api, new DeviceIdService(), _logger);
 
-            //Скачивает и хранит Json с баннером отдает по требованию, докачивает новые
+            //Скачивает и хранит Json с баннером, докачивает Texture, отдает по требованию, докачивает новые (Buffer)
             _contentProvider = new BannerContentProvider(_api, 2, _logger);
-            //Шлет события
+            //Шлет на сервак результаты просмотра
             _reporter = new EventReporter(_api, _logger);
-            //Создаем View
+            //Создает View
             _bannerFactory = new BannerFactory();
             _view = _bannerFactory.Get();
             Object.DontDestroyOnLoad(_view.gameObject);
 
-            //Попытка авторизоваться
-            var isOk = await _authenticator.AuthorizeDevice();
-            //Качаем контент
+            //Попытка авторизоваться и подписать Api
+            var isOk = await _authenticator.Authorize();
+            //Качаем первую партию контента 
             if (isOk)
                 _contentProvider.Init();
 
@@ -61,10 +68,9 @@ namespace Plugins.RZDAds.Core
             _initialized = true;
         }
 
-
         public static async UniTask Show()
         {
-            _logger?.Log("[Ads] Try show ad");
+            _logger?.Log("[Ads] Attempt show ad");
             if (_isShowing)
                 return;
 
@@ -92,14 +98,16 @@ namespace Plugins.RZDAds.Core
 
                 if (content == null)
                     return;
-
+                //Время нужно для сбора статистики
                 stopWatch.Start();
                 var isClick = await _view.Show(content);
                 stopWatch.Stop();
-
-                await Report(content.Id, isClick, (float)stopWatch.Elapsed.TotalSeconds);
+                
+                _logger?.Log($"[Ads] Click on banner: {isClick}");
                 if (isClick)
                     OpenUrl(content.Url);
+
+                await Report(content.Id, isClick, (float)stopWatch.Elapsed.TotalSeconds);
             }
             finally
             {
@@ -110,7 +118,7 @@ namespace Plugins.RZDAds.Core
         // Открываем Url рекламы 
         private static void OpenUrl(string url)
         {
-            _logger?.Log($"[Ads] Try open url {url}");
+            _logger?.Log($"[Ads] Attempt open ads url: {url}");
             Application.OpenURL(url);
         }
 
@@ -129,7 +137,7 @@ namespace Plugins.RZDAds.Core
             if (_authenticator.IsAuthorized)
                 return true;
 
-            var ok = await _authenticator.AuthorizeDevice();
+            var ok = await _authenticator.Authorize();
             return ok;
         }
 
@@ -142,15 +150,7 @@ namespace Plugins.RZDAds.Core
             return check.isDone && check.data.data;
         }
 
-
-        /*public static async UniTask<bool> IsReady()
-        {
-            if (!_initialized || !_contentProvider.IsReady)
-                return false;
-
-            return await CheckCanShow();
-        }*/
-        // Если надо завершить работу сервиса
+        // Если надо завершить работу сервиса, очистить ресурсы
         public static void Dispose()
         {
             if (_view != null)

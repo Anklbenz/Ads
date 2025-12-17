@@ -6,6 +6,7 @@ using System.Diagnostics;
 using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.ApiSystem;
 using UnityEngine;
+using ILogger = Plugins.RZDAds.Runtime.Scripts.ILogger;
 
 namespace Plugins.RZDAds.Core.ApiSystem
 {
@@ -22,7 +23,6 @@ namespace Plugins.RZDAds.Core.ApiSystem
         // Параметр: responseText сервера.
         // Возвращает true — если токен обновлён и запрос можно повторить.
         protected Func<string, UniTask<bool>> handleUnauthorizedResponse;
-
         //----
         protected string accessToken { get; set; } = string.Empty;
         protected int maxRetries { get; set; } = 2;

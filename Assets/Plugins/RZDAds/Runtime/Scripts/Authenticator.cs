@@ -1,8 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
-using Plugins.RZDAds.Core.ApiSystem;
+using Plugins.RZDAds.Runtime.Scripts.ApiSystem;
 using UnityEngine;
 
-namespace Plugins.RZDAds.Core
+namespace Plugins.RZDAds.Runtime.Scripts
 {
     public class Authenticator
     {
@@ -19,18 +19,20 @@ namespace Plugins.RZDAds.Core
             _deviceIdProvider = deviceIdProvider;
         }
 
-        public async UniTask<bool> AuthorizeDevice()
+        public async UniTask<bool> Authorize()
         {
+            //генерация уникального ключа устройства
             var uniqueAppKey = _deviceIdProvider.GetDeviceId();
-       
+            
+            //регистрация устройства
             var registerResponse = await _api.RegisterDevice(uniqueAppKey, Application.platform);
             _logger?.Log($"[Authenticator] Login isOk: {registerResponse.isDone}. Key: {uniqueAppKey}");
             if (!registerResponse.isDone || string.IsNullOrEmpty(registerResponse.data.token))
                 return false;
 
             var token = registerResponse.data.token;
-
-            _api.SetAuthorizeToken(token);
+            //Подписываем Api полученным токеном 
+            _api.ApplyAuthorizationToken(token);
 
             IsAuthorized = true;
             return true;

@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Plugins.RZDAds.Core.View
+namespace Plugins.RZDAds.Runtime.Scripts.View
 {
     public class Timer : MonoBehaviour
     {

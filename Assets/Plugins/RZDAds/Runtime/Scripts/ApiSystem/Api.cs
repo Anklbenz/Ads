@@ -1,9 +1,10 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.ApiSystem;
+using Plugins.RZDAds.Core.ApiSystem;
 using UnityEngine;
 
-namespace Plugins.RZDAds.Core.ApiSystem
+namespace Plugins.RZDAds.Runtime.Scripts.ApiSystem
 {
     public class Api : ApiClientBase
     {
@@ -14,10 +15,14 @@ namespace Plugins.RZDAds.Core.ApiSystem
         public Api(ApiSettings apiSettings, ILogger logger = null) : base(logger)
         {
             _apiSettings = apiSettings;
-            accessToken = apiSettings.AppKey;
+        }
+        // Ключом приложения должен быть подписан каждый запрос в Header
+        public void ApplyAppToken(string appKey)
+        {
+            accessToken = appKey;
         }
 
-        public void SetAuthorizeToken(string token)
+        public void ApplyAuthorizationToken(string token)
         {
             _token = token;
         }
