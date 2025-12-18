@@ -138,6 +138,15 @@ namespace Plugins.RZDAds.Runtime.Scripts
             //check.data.data <- bool можно или нет 
             return check.isDone && check.data.data;
         }
+        
+        //Так как класс статический в Editor при плохом интернете из-за await могут возникать неожиданные изменения переменных
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void ResetOnPlay()
+        {
+	        _initialized = false;
+	        _isInitializing = false;
+	        _view = null;
+        }
 
         // Если надо завершить работу сервиса, очистить ресурсы
         public static void Dispose()
