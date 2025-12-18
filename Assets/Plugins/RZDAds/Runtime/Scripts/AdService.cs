@@ -50,7 +50,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             _authenticator = new Authenticator(_api, new DeviceIdService(), _logger);
 
             //Скачивает и хранит Json с баннером, докачивает Texture, отдает по требованию, докачивает новые (Buffer)
-            _contentProvider = new BannerContentProvider(_api, 2, _logger);
+            _contentProvider = new BannerContentProvider(_api, 1, _logger);
             //Шлет на сервак результаты просмотра
             _reporter = new EventReporter(_api, _logger);
             //Создает View
@@ -70,9 +70,9 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
         public static async UniTask RequestShowAd()
         {
-	        _logger?.Log($"[Ads] Show ad requested: {false}");
+	        _logger?.Log($"[Ads] Show ad requested");
 	        if (_isShowing) {
-		        _logger?.Log($"[Ads] Attempt show ad: {false}");
+		        _logger?.Log($"[Ads] Attempt show success: {false}");
 		        return;
 	        }
 
@@ -144,15 +144,6 @@ namespace Plugins.RZDAds.Runtime.Scripts
             return check.isDone && check.data.data;
         }
         
-        //Так как класс статический в Editor при плохом интернете из-за await могут возникать неожиданные изменения переменных
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void ResetOnPlay()
-        {
-	        _initialized = false;
-	        _isInitializing = false;
-	        _isShowing = false;
-	        _view = null;
-        }
 
         // Если надо завершить работу сервиса, очистить ресурсы
         public static void Dispose()
