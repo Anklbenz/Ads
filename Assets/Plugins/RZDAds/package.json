@@ -2,7 +2,7 @@
   "name": "com.rzd.ads",
   "displayName": "RZDAds",
   "author": "Anklbenz8",
-  "version": "1.0.5`",
+  "version": "1.0.5",
   "unity": "2021.3",
   "description": "Пакет для интеграции рекламы в Unity-проекты РЖД",
   "dependencies": {
