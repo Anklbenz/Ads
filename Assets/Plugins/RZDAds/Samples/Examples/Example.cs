@@ -18,7 +18,7 @@ public class Example : MonoBehaviour
 
     private void Show()
     {
-        AdService.Show().Forget();
+        AdService.RequestShowAd().Forget();
     }
 
     public void OnDestroy()

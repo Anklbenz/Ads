@@ -68,7 +68,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             _initialized = true;
         }
 
-        public static async UniTask Show()
+        public static async UniTask RequestShowAd()
         {
             _logger?.Log("[Ads] Attempt show ad");
             if (_isShowing)
