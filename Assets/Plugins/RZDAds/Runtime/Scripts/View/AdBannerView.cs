@@ -48,12 +48,15 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             closeButton.gameObject.SetActive(false);
 
             //Таск таймера
-            try
-            {
-                await UpdateProgress(banner.Duration, _cts.Token);
+            try {
+	            await UpdateProgress(banner.Duration, _cts.Token);
             }
-            catch (OperationCanceledException) { }
-
+            catch (OperationCanceledException) {}
+          
+            //в Editor при Stop при OnDestroy await UpdateProgress(...) получает Cancel и попадает сюда, а Timer и close button уже уничтожен 
+            if (!this)
+	            return false;
+            
             timer.Hide();
             closeButton.gameObject.SetActive(true);
             
@@ -66,6 +69,10 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 
         private void Hide()
         {
+	        _cts?.Cancel();
+	        _cts?.Dispose();
+	        _cts = null;
+	        
             gameObject.SetActive(false);
             foreach (var display in _displayMap.Values)
             {
@@ -73,10 +80,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
                 display.Close();
             }
             _currentDisplay = null;
-            _cts?.Cancel();
-            _cts?.Dispose();
-            _cts = null;
-        }
+      }
 
         private async UniTask<bool> SetupContent(BannerContent banner)
         {
@@ -94,7 +98,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 		        return false;
 
             description.text = banner.Description;
-
+       
             timer.SetProgress(0f);
             timer.SetSeconds(banner.Duration);
             return true;
@@ -108,12 +112,13 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
                 token.ThrowIfCancellationRequested();
                 
                 elapsed += Time.unscaledDeltaTime;
+              
                 timer.SetProgress(Mathf.Clamp01(elapsed / duration));
                 timer.SetSeconds(Mathf.CeilToInt(duration - elapsed));
 
-                await UniTask.Yield();
+                await UniTask.Yield(this.GetCancellationTokenOnDestroy());
             }
-
+            
             timer.SetProgress(1f);
             timer.SetSeconds(0);
         }
@@ -125,6 +130,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         private void OnAdClick()
         {
             _clicked = true;
+            Debug.Log($"Try open url: \"{_bannerUrl}\"");
             Application.OpenURL(_bannerUrl);
         }
 
@@ -152,5 +158,6 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
                 ["video"] = videoDisplay,
             };
         }
+        
     }
 }

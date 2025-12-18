@@ -26,7 +26,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             
             //регистрация устройства
             var registerResponse = await _api.RegisterDevice(uniqueAppKey, Application.platform);
-            _logger?.Log($"[Authenticator] Login isOk: {registerResponse.isDone}. Key: {uniqueAppKey}");
+            _logger?.Log($"[Authenticator] authorization is: {registerResponse.isDone}. Key: {uniqueAppKey}");
             if (!registerResponse.isDone || string.IsNullOrEmpty(registerResponse.data.token))
                 return false;
 
