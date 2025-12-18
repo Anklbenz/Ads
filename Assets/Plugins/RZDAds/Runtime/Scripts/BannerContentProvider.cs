@@ -22,8 +22,8 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
     public class BannerContentProvider
     {
-        private const int PREWARM_RETRIES = 5;
-        private const int PREWARM_DELAY_MILLISECONDS = 1000;
+        private const int PREWARM_RETRIES = 2;
+        private const int PREWARM_RETRY_DELAY_MILLISECONDS = 1000;
         private readonly Api _api;
         private readonly ILogger _logger;
 
@@ -77,7 +77,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
                 // Только Если загрузить не удалось, delay перед следующей попыткой
                 if (itemsBefore == _prepared.Count)
-                    await UniTask.Delay(PREWARM_DELAY_MILLISECONDS);
+                    await UniTask.Delay(PREWARM_RETRY_DELAY_MILLISECONDS);
                 retries--;
             }
         }
