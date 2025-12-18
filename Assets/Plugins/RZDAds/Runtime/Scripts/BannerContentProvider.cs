@@ -31,6 +31,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
         private readonly Queue<BannerContent> _prepared = new();
         private readonly int _bannerBufferSize;
         private bool _isLoading;
+        private bool _isPrewarming;
         private bool _isInitialized;
 
         public bool HasBanner => _prepared.Count > 0;
@@ -67,19 +68,28 @@ namespace Plugins.RZDAds.Runtime.Scripts
         //Поддержание буфера с объявлений полным
         private async UniTask Prewarm()
         {
-            //retires на случай если loadNext ничего не отдаст (напр ошибка сервера) цикл будет вечным
-            //retries 5 раз попробует и все
-            int retries = PREWARM_RETRIES;
-            while (_prepared.Count < _bannerBufferSize && retries > 0)
-            {
-                int itemsBefore = _prepared.Count;
-                await LoadNext();
+	        if(_isPrewarming)
+		        return;
+	        _isPrewarming = true;
 
-                // Только Если загрузить не удалось, delay перед следующей попыткой
-                if (itemsBefore == _prepared.Count)
-                    await UniTask.Delay(PREWARM_RETRY_DELAY_MILLISECONDS);
-                retries--;
-            }
+	        try {
+		        //retires на случай если loadNext ничего не отдаст (напр ошибка сервера) цикл будет вечным
+		        //retries 5 раз попробует и все
+		        int retries = PREWARM_RETRIES;
+		        while (_prepared.Count < _bannerBufferSize && retries > 0) {
+			        int itemsBefore = _prepared.Count;
+			        await LoadNext();
+
+			        // Только Если загрузить не удалось, delay перед следующей попыткой
+			        if (itemsBefore == _prepared.Count)
+				        await UniTask.Delay(PREWARM_RETRY_DELAY_MILLISECONDS);
+			        retries--;
+		        }
+	        }
+	        finally 
+	        {
+		        _isPrewarming = false;
+	        }
         }
 
         private async UniTask LoadNext()

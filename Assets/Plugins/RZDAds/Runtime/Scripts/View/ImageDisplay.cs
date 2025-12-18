@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Plugins.RZDAds.Runtime.Scripts.View
 {
     public interface IDisplay
     {
-        void Set(BannerContent banner);
+        UniTask<bool> TrySet(BannerContent banner);
         void Open();
         void Close();
         void Clear();
@@ -16,13 +17,16 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         [SerializeField] private AspectRatioFitter aspectRationFitter;
         [SerializeField] private RawImage image;
 
-        public void Set(BannerContent banner)
+        public async UniTask<bool> TrySet(BannerContent banner)
         {
             var texture = banner.Texture;
             image.texture = texture;
 
-            if (texture != null)
+            //texture.height > 0 деление на 0
+            var isValid = texture != null && texture.height > 0; 
+            if (isValid)
                 aspectRationFitter.aspectRatio = (float)texture.width / texture.height;
+            return await UniTask.FromResult(isValid);
         }
 
         public void Clear()

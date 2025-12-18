@@ -1,87 +1,109 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Plugins.RZDAds.Runtime.Scripts.View
-{
-    public class VideoDisplay : MonoBehaviour, IDisplay
-    {
-        [SerializeField] private AspectRatioFitter aspect;
-        [SerializeField] private VideoPlayer player;
-        [SerializeField] private RawImage rawImage;
+namespace Plugins.RZDAds.Runtime.Scripts.View {
+	public class VideoDisplay : MonoBehaviour, IDisplay {
+		private const int ALLOWED_PREPARE_TIME = 5;
+		[SerializeField] private AspectRatioFitter aspect;
+		[SerializeField] private VideoPlayer player;
+		[SerializeField] private RawImage rawImage;
 
-        [SerializeField] private Button muteButton;
-        [SerializeField] private Sprite muteSprite;
-        [SerializeField] private Sprite unmuteSprite;
-        [SerializeField] private Image muteImage;
-        private bool _isMuted;
+		[SerializeField] private Button muteButton;
+		[SerializeField] private Sprite muteSprite;
+		[SerializeField] private Sprite unmuteSprite;
+		[SerializeField] private Image muteImage;
+		private bool _isMuted;
 
-        public void Set(BannerContent banner)
-        {
-            player.url = banner.VideoUrl;
-            player.renderMode = VideoRenderMode.APIOnly;
-            PrepareAndPlay().Forget();
-            Unmute();
-        }
+		public async UniTask<bool> TrySet(BannerContent banner) {
+			Unmute();
+			player.Stop();
+			player.url = banner.VideoUrl;
+			player.renderMode = VideoRenderMode.APIOnly;
 
-        private async UniTask PrepareAndPlay()
-        {
-            player.Prepare();
-            while (!player.isPrepared)
-                await UniTask.Yield();
+			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ALLOWED_PREPARE_TIME));
 
-            rawImage.texture = player.texture;
+			void OnError(VideoPlayer _, string msg) {
+				Debug.LogError($"[VideoDisplay] Video error: {msg}");
+				cts.Cancel();
+			}
 
-            if (player.width > 0 && player.height > 0)
-                aspect.aspectRatio = player.width / (float)player.height;
+			player.errorReceived += OnError;
 
-            player.Play();
-        }
+			try {
+				await PrepareAndPlay(cts.Token);
+				return true;
+			}
+			catch (OperationCanceledException) {
+				return false;
+			}
+			catch (Exception e) {
+				Debug.LogError($"[VideoDisplay] Failed: {e}");
+				return false;
+			}
+			finally {
+				player.errorReceived -= OnError;
+			}
+		}
 
-        private void ToggleMuted()
-        {
-            _isMuted = !_isMuted;
-            if (!_isMuted)
-                Unmute();
-            else
-                Mute();
-        }
+		private async UniTask PrepareAndPlay(CancellationToken ct) {
+			player.Prepare();
 
-        private void Mute()
-        {
-            player.SetDirectAudioVolume(0, 0f);
-            muteImage.sprite = muteSprite;
-            _isMuted = true;
-        }
+			await UniTask.WaitUntil(
+					() => player.isPrepared,
+					cancellationToken: ct);
 
-        private void Unmute()
-        {
-            player.SetDirectAudioVolume(0, 1f);
-            muteImage.sprite = unmuteSprite;
-            _isMuted = false;
-        }
+			if (!player.isPrepared)
+				throw new Exception("Video prepare failed");
 
-        public void Clear()
-        {
-            player.Stop();
-            rawImage.texture = null;
-        }
+			rawImage.texture = player.texture;
 
-        public void Open()
-            => gameObject.SetActive(true);
+			if (player.width > 0 && player.height > 0)
+				aspect.aspectRatio = player.width / (float)player.height;
 
-        public void Close()
-            => gameObject.SetActive(false);
+			player.Play();
+		}
 
-        private void OnEnable()
-        {
-            muteButton.onClick.AddListener(ToggleMuted);
-        }
+		private void ToggleMuted() {
+			_isMuted = !_isMuted;
+			if (!_isMuted)
+				Unmute();
+			else
+				Mute();
+		}
 
-        private void OnDisable()
-        {
-            muteButton.onClick.RemoveListener(ToggleMuted);
-        }
-    }
+		private void Mute() {
+			player.SetDirectAudioVolume(0, 0f);
+			muteImage.sprite = muteSprite;
+			_isMuted = true;
+		}
+
+		private void Unmute() {
+			player.SetDirectAudioVolume(0, 1f);
+			muteImage.sprite = unmuteSprite;
+			_isMuted = false;
+		}
+
+		public void Clear() {
+			player.Stop();
+			rawImage.texture = null;
+		}
+
+		public void Open()
+			=> gameObject.SetActive(true);
+
+		public void Close()
+			=> gameObject.SetActive(false);
+
+		private void OnEnable() {
+			muteButton.onClick.AddListener(ToggleMuted);
+		}
+
+		private void OnDisable() {
+			muteButton.onClick.RemoveListener(ToggleMuted);
+		}
+	}
 }

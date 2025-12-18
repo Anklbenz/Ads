@@ -37,9 +37,14 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             gameObject.SetActive(true);
 
             //Настраиваем контент согласно пришедшим данным
-            SetupContent(banner);
+             var contentOk = await SetupContent(banner);
+             if (!contentOk) 
+             {
+	             Hide();
+	             return false;
+             }
 
-            timer.Show();
+             timer.Show();
             closeButton.gameObject.SetActive(false);
 
             //Таск таймера
@@ -67,29 +72,32 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
                 display.Clear();
                 display.Close();
             }
-
             _currentDisplay = null;
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
         }
 
-        private void SetupContent(BannerContent banner)
+        private async UniTask<bool> SetupContent(BannerContent banner)
         {
             if (!_displayMap.TryGetValue(banner.Type, out IDisplay display))
             {
                 Debug.LogError($"[View] Cannot show banner: unknown type {banner.Type}");
-                _cts?.Cancel();
-                _tcs?.TrySetResult();
-                Hide();
-                return;
+                return false;
             }
 
             _currentDisplay = display;
             _currentDisplay.Open();
-            _currentDisplay.Set(banner);
+	        var setResult = await _currentDisplay.TrySet(banner);
+
+	        if (!setResult)
+		        return false;
 
             description.text = banner.Description;
 
             timer.SetProgress(0f);
             timer.SetSeconds(banner.Duration);
+            return true;
         }
 
         private async UniTask UpdateProgress(float duration, CancellationToken token)
