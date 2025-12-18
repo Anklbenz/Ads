@@ -70,9 +70,11 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
         public static async UniTask RequestShowAd()
         {
-            _logger?.Log("[Ads] Attempt show ad");
-            if (_isShowing)
-                return;
+	        _logger?.Log($"[Ads] Show ad requested: {false}");
+	        if (_isShowing) {
+		        _logger?.Log($"[Ads] Attempt show ad: {false}");
+		        return;
+	        }
 
             _isShowing = true;
 
@@ -86,6 +88,9 @@ namespace Plugins.RZDAds.Runtime.Scripts
                     _logger?.Log($"[Ads] Authorized isOk: ({false})");
                     return;
                 }
+                var bannerReady = _contentProvider.HasBanner;
+                if (!bannerReady)
+	                return;
 
                 var canShow = await CheckCanShow();
                 if (!canShow)
@@ -145,6 +150,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
         {
 	        _initialized = false;
 	        _isInitializing = false;
+	        _isShowing = false;
 	        _view = null;
         }
 
