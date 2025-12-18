@@ -11,7 +11,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
 {
     public static class AdService
     {
-        private const string API_SETTINGS_RESOURES_PATH = "ApiSettings";
+        private const string API_SETTINGS_RESOURCES_PATH = "ApiSettings";
 
         private static Api _api;
         private static BannerFactory _bannerFactory;
@@ -27,7 +27,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
         // Метод нужно вызвать при старте клиентского приложения 
         // appToken - уникальный ключ игры, logRequired нужен ли лог
-        public static async UniTask Initialize(string appToken, bool logRequired = true)
+        public static async UniTask Initialize(string appToken, bool logRequired = false)
         {
             if (_initialized || _isInitializing)
                 return;
@@ -39,7 +39,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
                 : null;
 
             //apiSettings все ручки, host и проч конфиг для для REST
-            var apiSettings = Resources.Load<ApiSettings>(API_SETTINGS_RESOURES_PATH);
+            var apiSettings = Resources.Load<ApiSettings>(API_SETTINGS_RESOURCES_PATH);
             //api - REST клиент выполняет все запросы
             _api = new Api(apiSettings, _logger);
             //Ключ приложения нужен в Header каждого запроса 
