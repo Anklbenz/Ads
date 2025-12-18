@@ -19,7 +19,6 @@ namespace Plugins.RZDAds.Runtime.Scripts.View {
 		private bool _isMuted;
 
 		public async UniTask<bool> TrySet(BannerContent banner) {
-			Unmute();
 			player.Stop();
 			player.url = banner.VideoUrl;
 			player.renderMode = VideoRenderMode.APIOnly;
