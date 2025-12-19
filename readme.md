@@ -51,9 +51,10 @@ UniTask используется для асинхронных операций 
 ### Установка пакета 
 1. Импортируйте пакет RZDAds через **PackageManager -> + -> Add packadge from git Url**
 `https://git.corp/games/adv-sdk.git?path=Assets/Plugins/RZDAds#main`
+
 `https://github.com/Anklbenz/Ads.git?path=Assets/Plugins/RZDAds`
 
-2. Установите пакет UniTask через **PackageManager -> + -> Add packadge from git Url**
+3. Установите пакет UniTask через **PackageManager -> + -> Add packadge from git Url**
 `https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
 
-3. Пример в Samples показывает работу
+4. Пример в Samples показывает работу
