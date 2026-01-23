@@ -984,8 +984,8 @@ GameObject:
   - component: {fileID: 1762630888361327147}
   - component: {fileID: 8352660242285300446}
   - component: {fileID: 5103904164554782232}
-  - component: {fileID: 3091927424812024036}
   - component: {fileID: 626664035482705594}
+  - component: {fileID: 3091927424812024036}
   m_Layer: 5
   m_Name: VideoDisplay
   m_TagString: Untagged
@@ -1052,6 +1052,25 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &626664035482705594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5341099384676423297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02af3215f5d34c26b7c63952460eb4e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aspect: {fileID: 2777567201011589021}
+  player: {fileID: 3091927424812024036}
+  rawImage: {fileID: 3744525202353780373}
+  muteButton: {fileID: 834211109420133925}
+  muteSprite: {fileID: 21300000, guid: 43ba24e5fb4b095428496244ad412ccb, type: 3}
+  unmuteSprite: {fileID: 21300000, guid: d7501008c3fce0b48b849cc473ac7c8a, type: 3}
+  muteImage: {fileID: 1886025578313720720}
 --- !u!328 &3091927424812024036
 VideoPlayer:
   m_ObjectHideFlags: 0
@@ -1088,25 +1107,6 @@ VideoPlayer:
   m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
   m_VideoShaders: []
---- !u!114 &626664035482705594
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5341099384676423297}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 02af3215f5d34c26b7c63952460eb4e3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  aspect: {fileID: 2777567201011589021}
-  player: {fileID: 3091927424812024036}
-  rawImage: {fileID: 3744525202353780373}
-  muteButton: {fileID: 834211109420133925}
-  muteSprite: {fileID: 21300000, guid: 43ba24e5fb4b095428496244ad412ccb, type: 3}
-  unmuteSprite: {fileID: 21300000, guid: d7501008c3fce0b48b849cc473ac7c8a, type: 3}
-  muteImage: {fileID: 1886025578313720720}
 --- !u!1 &5585892459464108671
 GameObject:
   m_ObjectHideFlags: 0
@@ -1443,7 +1443,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: -139.56256}
+  m_SizeDelta: {x: 0, y: -380.82077}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &757956133229547085
 CanvasRenderer:
@@ -2032,7 +2032,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 52b0925bd5e7fa24392ceefda7ee2c4a, type: 2}
   m_sharedMaterial: {fileID: -4760275737223578562, guid: 52b0925bd5e7fa24392ceefda7ee2c4a, type: 2}

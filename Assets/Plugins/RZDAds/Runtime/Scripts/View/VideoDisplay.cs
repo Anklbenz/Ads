@@ -5,104 +5,127 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Plugins.RZDAds.Runtime.Scripts.View {
-	public class VideoDisplay : MonoBehaviour, IDisplay {
-		private const int ALLOWED_PREPARE_TIME = 5;
-		[SerializeField] private AspectRatioFitter aspect;
-		[SerializeField] private VideoPlayer player;
-		[SerializeField] private RawImage rawImage;
+namespace Plugins.RZDAds.Runtime.Scripts.View
+{
+    public class VideoDisplay : MonoBehaviour, IDisplay
+    {
+        private const int ALLOWED_PREPARE_TIME = 7;
+        [SerializeField] private AspectRatioFitter aspect;
+        [SerializeField] private VideoPlayer player;
+        [SerializeField] private RawImage rawImage;
 
-		[SerializeField] private Button muteButton;
-		[SerializeField] private Sprite muteSprite;
-		[SerializeField] private Sprite unmuteSprite;
-		[SerializeField] private Image muteImage;
-		private bool _isMuted;
+        [SerializeField] private Button muteButton;
+        [SerializeField] private Sprite muteSprite;
+        [SerializeField] private Sprite unmuteSprite;
+        [SerializeField] private Image muteImage;
+        private bool _isMuted;
 
-		public async UniTask<bool> TrySet(BannerContent banner) {
-			player.Stop();
-			player.url = banner.VideoUrl;
-			player.renderMode = VideoRenderMode.APIOnly;
+        public async UniTask<bool> TrySet(BannerContent banner)
+        {
+            player.Stop();
+            player.url = banner.VideoUrl;
+            player.renderMode = VideoRenderMode.APIOnly;
 
-			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ALLOWED_PREPARE_TIME));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ALLOWED_PREPARE_TIME));
 
-			void OnError(VideoPlayer _, string msg) {
-				Debug.LogError($"[VideoDisplay] Video error: {msg}");
-				cts.Cancel();
-			}
+            void OnError(VideoPlayer _, string msg)
+            {
+                Debug.LogError($"[VideoDisplay] Video error: {msg}");
+                cts.Cancel();
+            }
 
-			player.errorReceived += OnError;
+            player.errorReceived += OnError;
+            
+            try
+            {
+                await PrepareAndPlay(cts.Token);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[VideoDisplay] Failed: {e}");
+                return false;
+            }
+            finally
+            {
+                player.errorReceived -= OnError;
+            }
+        }
 
-			try {
-				await PrepareAndPlay(cts.Token);
-				return true;
-			}
-			catch (OperationCanceledException) {
-				return false;
-			}
-			catch (Exception e) {
-				Debug.LogError($"[VideoDisplay] Failed: {e}");
-				return false;
-			}
-			finally {
-				player.errorReceived -= OnError;
-			}
-		}
+        private async UniTask PrepareAndPlay(CancellationToken ct)
+        {
+            //Некоторые видео долго грузятся и на старте виден белый квадрат RawImage 
+            //Поэтому Disable rawImage до того как загрузится
+            rawImage.enabled = false;
 
-		private async UniTask PrepareAndPlay(CancellationToken ct) {
-			player.Prepare();
+            player.Prepare();
+            await UniTask.WaitUntil(
+                () => player.isPrepared &&
+                      player.texture != null &&
+                      player.texture.width > 16,
+                cancellationToken: ct);
 
-			await UniTask.WaitUntil(
-					() => player.isPrepared,
-					cancellationToken: ct);
+            if (!player.isPrepared || player.texture == null || player.texture.width <= 16)
+                throw new Exception("Video prepare failed");
 
-			if (!player.isPrepared)
-				throw new Exception("Video prepare failed");
+            rawImage.texture = player.texture;
 
-			rawImage.texture = player.texture;
+            if (player.width > 0 && player.height > 0)
+                aspect.aspectRatio = player.width / (float)player.height;
 
-			if (player.width > 0 && player.height > 0)
-				aspect.aspectRatio = player.width / (float)player.height;
+            player.Play();
+            //На всякий случай жду еще и конец кадра, чтобы не козлило
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+            rawImage.enabled = true;
+        }
 
-			player.Play();
-		}
+        private void ToggleMuted()
+        {
+            _isMuted = !_isMuted;
+            if (!_isMuted)
+                Unmute();
+            else
+                Mute();
+        }
 
-		private void ToggleMuted() {
-			_isMuted = !_isMuted;
-			if (!_isMuted)
-				Unmute();
-			else
-				Mute();
-		}
+        private void Mute()
+        {
+            player.SetDirectAudioVolume(0, 0f);
+            muteImage.sprite = muteSprite;
+            _isMuted = true;
+        }
 
-		private void Mute() {
-			player.SetDirectAudioVolume(0, 0f);
-			muteImage.sprite = muteSprite;
-			_isMuted = true;
-		}
+        private void Unmute()
+        {
+            player.SetDirectAudioVolume(0, 1f);
+            muteImage.sprite = unmuteSprite;
+            _isMuted = false;
+        }
 
-		private void Unmute() {
-			player.SetDirectAudioVolume(0, 1f);
-			muteImage.sprite = unmuteSprite;
-			_isMuted = false;
-		}
+        public void Clear()
+        {
+            player.Stop();
+            rawImage.texture = null;
+        }
 
-		public void Clear() {
-			player.Stop();
-			rawImage.texture = null;
-		}
+        public void Open()
+            => gameObject.SetActive(true);
 
-		public void Open()
-			=> gameObject.SetActive(true);
+        public void Close()
+            => gameObject.SetActive(false);
 
-		public void Close()
-			=> gameObject.SetActive(false);
+        private void OnEnable()
+        {
+            muteButton.onClick.AddListener(ToggleMuted);
+        }
 
-		private void OnEnable() {
-			muteButton.onClick.AddListener(ToggleMuted);
-		}
-
-		private void OnDisable() {
-			muteButton.onClick.RemoveListener(ToggleMuted);
-		}
-	}
+        private void OnDisable()
+        {
+            muteButton.onClick.RemoveListener(ToggleMuted);
+        }
+    }
 }

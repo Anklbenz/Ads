@@ -53,7 +53,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             }
             catch (OperationCanceledException) {}
           
-            //в Editor при Stop при OnDestroy await UpdateProgress(...) получает Cancel и попадает сюда, а Timer и close button уже уничтожен 
+            //только в Editor при Stop при OnDestroy await UpdateProgress(...) получает Cancel и попадает сюда, а Timer и close button уже уничтожен 
             if (!this)
 	            return false;
             
@@ -92,6 +92,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 
             _currentDisplay = display;
             _currentDisplay.Open();
+            //два типа экранов
 	        var setResult = await _currentDisplay.TrySet(banner);
 
 	        if (!setResult)
