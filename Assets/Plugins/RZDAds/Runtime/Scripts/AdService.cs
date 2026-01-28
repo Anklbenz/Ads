@@ -26,7 +26,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
         private static Api _api;
         private static BannerFactory _bannerFactory;
         private static Authenticator _authenticator;
-        private static BannerContentProvider _contentProvider;
+        private static BannerContentProvider.BannerContentProvider _contentProvider;
         private static EventReporter _reporter;
 
         private static AdBannerView _view;
@@ -70,7 +70,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
 		        _authenticator = new Authenticator(_api, new DeviceIdService(), _logger);
 
 		        //Скачивает и хранит Json с баннером, докачивает Texture, отдает по требованию, докачивает новые (Buffer)
-		        _contentProvider = new BannerContentProvider(_api, 1, _logger);
+		        _contentProvider = new BannerContentProvider.BannerContentProvider(_api, 1, _logger);
 
 		        //Шлет на сервак результаты просмотра
 		        _reporter = new EventReporter(_api, _logger);

@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Plugins.RZDAds.Runtime.Scripts.BannerContentProvider;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using Debug = UnityEngine.Debug;
 
 namespace Plugins.RZDAds.Runtime.Scripts.View
 {
     public class VideoDisplay : MonoBehaviour, IDisplay
     {
-        private const int ALLOWED_PREPARE_TIME = 7;
+        private const int ALLOWED_PREPARE_TIME = 20;
         [SerializeField] private AspectRatioFitter aspect;
         [SerializeField] private VideoPlayer player;
         [SerializeField] private RawImage rawImage;
@@ -23,9 +25,9 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         public async UniTask<bool> TrySet(BannerContent banner)
         {
             player.Stop();
-            player.url = banner.VideoUrl;
+            player.url = banner.LocalPath;
             player.renderMode = VideoRenderMode.APIOnly;
-
+            
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ALLOWED_PREPARE_TIME));
 
             void OnError(VideoPlayer _, string msg)
@@ -43,6 +45,8 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             }
             catch (OperationCanceledException)
             {
+           
+                Debug.LogError($"[VideoDisplay] Failed. Timeout: {ALLOWED_PREPARE_TIME} sec");
                 return false;
             }
             catch (Exception e)

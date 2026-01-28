@@ -1,23 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Plugins.RZDAds.ApiSystem;
 using Plugins.RZDAds.Runtime.Scripts.ApiSystem;
 using UnityEngine;
 
-namespace Plugins.RZDAds.Runtime.Scripts
+namespace Plugins.RZDAds.Runtime.Scripts.BannerContentProvider
 {
-    public class BannerContent
+    public class MediaCache
     {
-        public string Type;
-        public uint Id;
-        public string Title;
-        public string Description;
-        public string Url;
-        public int Duration;
-        public Texture2D Texture;
-        public string VideoUrl;
+        private const string ADS_CACHE_FOLDER = "AdsСache";
+        private readonly string _root;
+
+        public MediaCache()
+        {
+            _root = Path.Combine(Application.dataPath, ADS_CACHE_FOLDER);
+            Directory.CreateDirectory(_root);
+        }
+
+        public async UniTask<string> GetOrDownload(string url)
+        {
+        }
     }
 
     public class BannerContentProvider
@@ -68,28 +73,30 @@ namespace Plugins.RZDAds.Runtime.Scripts
         //Поддержание буфера с объявлений полным
         private async UniTask Prewarm()
         {
-	        if(_isPrewarming)
-		        return;
-	        _isPrewarming = true;
+            if (_isPrewarming)
+                return;
+            _isPrewarming = true;
 
-	        try {
-		        //retires на случай если loadNext ничего не отдаст (напр ошибка сервера) цикл будет вечным
-		        //retries 5 раз попробует и все
-		        int retries = PREWARM_RETRIES;
-		        while (_prepared.Count < _bannerBufferSize && retries > 0) {
-			        int itemsBefore = _prepared.Count;
-			        await LoadNext();
+            try
+            {
+                //retires на случай если loadNext ничего не отдаст (напр ошибка сервера) цикл будет вечным
+                //retries 5 раз попробует и все
+                int retries = PREWARM_RETRIES;
+                while (_prepared.Count < _bannerBufferSize && retries > 0)
+                {
+                    int itemsBefore = _prepared.Count;
+                    await LoadNext();
 
-			        // Только Если загрузить не удалось, delay перед следующей попыткой
-			        if (itemsBefore == _prepared.Count)
-				        await UniTask.Delay(PREWARM_RETRY_DELAY_MILLISECONDS);
-			        retries--;
-		        }
-	        }
-	        finally 
-	        {
-		        _isPrewarming = false;
-	        }
+                    // Только Если загрузить не удалось, delay перед следующей попыткой
+                    if (itemsBefore == _prepared.Count)
+                        await UniTask.Delay(PREWARM_RETRY_DELAY_MILLISECONDS);
+                    retries--;
+                }
+            }
+            finally
+            {
+                _isPrewarming = false;
+            }
         }
 
         private async UniTask LoadNext()
@@ -106,8 +113,8 @@ namespace Plugins.RZDAds.Runtime.Scripts
                 var banner = response.data?.data;
                 if (!response.isDone || banner == null)
                     return;
-                //Mapping json контента в контент для показа + загрузка Texture 
-                var content = await BuildContent(banner.banner);
+                //Mapping json контента в контент для показа
+                var content = ContentFactory.BuildContent(banner.banner, "");
 
                 if (content != null)
                     _prepared.Enqueue(content);
@@ -121,54 +128,54 @@ namespace Plugins.RZDAds.Runtime.Scripts
                 _isLoading = false;
             }
         }
+    }
 
-        private async UniTask<BannerContent> BuildContent(Banner banner)
+    public static class ContentFactory
+    {
+        private const string VIDEO = "Video";
+        private const string IMAGE = "Image";
+
+        public static BannerContent BuildContent(Banner banner, string localPath)
         {
             var media = banner.media?.FirstOrDefault();
             if (media == null)
                 return null;
 
             var settings = banner.settings?.FirstOrDefault();
-            _logger?.Log($"[ContentProvider] Banner id:{banner.id} is {media.type}.");
-            if (media.type != "image")
-                return new BannerContent
+
+            return media.type switch
+            {
+                IMAGE => new ImageBanner()
                 {
-                    Type = media.type,
+                    LocalPath = localPath,
                     Id = banner.id,
                     Title = banner.title,
                     Description = banner.description,
                     Url = banner.link,
                     Duration = settings?.duration ?? 5,
-                    VideoUrl = media.url
-                };
-
-            var texture = await GetTexture(media.url);
-            _logger?.Log($"[ContentProvider] Texture download isOk: {texture != null}");
-
-            if (texture != null)
-                return new BannerContent
+                },
+                VIDEO => new VideoBanner()
                 {
-                    Type = media.type,
+                    LocalPath = localPath,
                     Id = banner.id,
                     Title = banner.title,
                     Description = banner.description,
                     Url = banner.link,
                     Duration = settings?.duration ?? 5,
-                    Texture = texture,
-                };
-
-            return null;
-        }
-
-        private async UniTask<Texture2D> GetTexture(string url)
-        {
-            var textureResult = await _api.DownloadTexture(url);
-            var texture = textureResult.data;
-
-            if (!textureResult.isDone || texture == null)
-                return null;
-
-            return texture;
+                },
+                _ => null
+            };
         }
     }
+
+    /*private async UniTask<Texture2D> GetTexture(string url)
+    {
+        var textureResult = await _api.DownloadTexture(url);
+        var texture = textureResult.data;
+
+        if (!textureResult.isDone || texture == null)
+            return null;
+
+        return texture;
+    }*/
 }
