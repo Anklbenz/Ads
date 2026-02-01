@@ -21,12 +21,20 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         [SerializeField] private Sprite unmuteSprite;
         [SerializeField] private Image muteImage;
         private bool _isMuted;
+        private RenderTexture _rt;
 
         public async UniTask<bool> TrySet(BannerContent banner)
         {
-            player.Stop();
+            Reset();
             player.url = banner.LocalPath;
-            player.renderMode = VideoRenderMode.APIOnly;
+            player.renderMode = VideoRenderMode.RenderTexture;
+            player.waitForFirstFrame = true;
+            
+            _rt = new RenderTexture(16, 16, 0, RenderTextureFormat.ARGB32);
+            _rt.Create();
+
+            player.targetTexture = _rt;
+            rawImage.texture = _rt;
             
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ALLOWED_PREPARE_TIME));
 
@@ -60,6 +68,8 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             }
         }
 
+
+
         private async UniTask PrepareAndPlay(CancellationToken ct)
         {
             //Некоторые видео долго грузятся и на старте виден белый квадрат RawImage 
@@ -75,14 +85,27 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 
             if (!player.isPrepared || player.texture == null || player.texture.width <= 16)
                 throw new Exception("Video prepare failed");
+           
+            var videoW =(int) player.width;
+            var videoH =(int) player.height;
 
-            rawImage.texture = player.texture;
+            // правильный аспект
+            aspect.aspectRatio = videoW / (float)videoH;
 
-            if (player.width > 0 && player.height > 0)
-                aspect.aspectRatio = player.width / (float)player.height;
+            // ПЕРЕСОЗДАЁМ RT под реальное разрешение
+            player.targetTexture = null;
+
+            _rt.Release();
+            Destroy(_rt);
+
+            _rt = new RenderTexture(videoW, videoH, 0, RenderTextureFormat.ARGB32);
+            _rt.Create();
+
+            player.targetTexture = _rt;
+            rawImage.texture = _rt;
 
             player.Play();
-            //На всякий случай жду еще и конец кадра, чтобы не козлило
+
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
             rawImage.enabled = true;
         }
@@ -130,6 +153,22 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
         private void OnDisable()
         {
             muteButton.onClick.RemoveListener(ToggleMuted);
+        }
+        
+        private void Reset()
+        {
+            player.Stop();
+            player.clip = null;
+            player.url = null;
+            
+            player.targetTexture = null;
+            rawImage.texture = null;
+
+            if (_rt == null) 
+                return;
+            _rt.Release();
+            Destroy(_rt);
+            _rt = null;
         }
     }
 }
