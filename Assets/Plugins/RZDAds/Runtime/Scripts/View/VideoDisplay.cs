@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Plugins.RZDAds.Runtime.Scripts.BannerContentProvider;
+using Plugins.RZDAds.Runtime.Scripts.Banner;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;

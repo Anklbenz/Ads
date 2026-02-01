@@ -1,30 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Plugins.RZDAds.ApiSystem;
 using Plugins.RZDAds.Runtime.Scripts.ApiSystem;
-using UnityEngine;
 
-namespace Plugins.RZDAds.Runtime.Scripts.BannerContentProvider
+namespace Plugins.RZDAds.Runtime.Scripts.Banner
 {
-    public class MediaCache
-    {
-        private const string ADS_CACHE_FOLDER = "AdsСache";
-        private readonly string _root;
-
-        public MediaCache()
-        {
-            _root = Path.Combine(Application.dataPath, ADS_CACHE_FOLDER);
-            Directory.CreateDirectory(_root);
-        }
-
-        public async UniTask<string> GetOrDownload(string url)
-        {
-        }
-    }
-
     public class BannerContentProvider
     {
         private const int PREWARM_RETRIES = 2;
@@ -38,15 +19,18 @@ namespace Plugins.RZDAds.Runtime.Scripts.BannerContentProvider
         private bool _isLoading;
         private bool _isPrewarming;
         private bool _isInitialized;
+        private readonly MediaCache _mediaCache;
 
         public bool HasBanner => _prepared.Count > 0;
 
         public BannerContentProvider(
             Api api,
-            int bannerBufferSize = 2,
+            MediaCache mediaCache,
+            int bannerBufferSize = 3,
             ILogger logger = null)
         {
             _api = api;
+            _mediaCache = mediaCache;
             _bannerBufferSize = bannerBufferSize;
             _logger = logger;
         }
@@ -108,13 +92,23 @@ namespace Plugins.RZDAds.Runtime.Scripts.BannerContentProvider
 
             try
             {
+                //Получаю данные банера с сервера
                 var response = await _api.GetBanner();
 
-                var banner = response.data?.data;
-                if (!response.isDone || banner == null)
+                var banner = response.data?.data?.banner;
+                var mediaArray = banner?.media;
+                if (!response.isDone || mediaArray == null || mediaArray.Length == 0)
                     return;
+
+                var media = mediaArray.First();
+                //Качаю если скачано ранее просто возвращаю путь
+                var localPath = await _mediaCache.GetOrDownload(media);
+                //localPath == null когда скачивание не удалось
+                if (string.IsNullOrEmpty(localPath))
+                    return;
+
                 //Mapping json контента в контент для показа
-                var content = ContentFactory.BuildContent(banner.banner, "");
+                var content = ContentFactory.BuildContent(banner, localPath);
 
                 if (content != null)
                     _prepared.Enqueue(content);
@@ -132,50 +126,39 @@ namespace Plugins.RZDAds.Runtime.Scripts.BannerContentProvider
 
     public static class ContentFactory
     {
-        private const string VIDEO = "Video";
-        private const string IMAGE = "Image";
+        private const string VIDEO = "video";
+        private const string IMAGE = "image";
 
-        public static BannerContent BuildContent(Banner banner, string localPath)
+        public static BannerContent BuildContent(RZDAds.ApiSystem.BannerDto bannerDto, string localPath)
         {
-            var media = banner.media?.FirstOrDefault();
+            var media = bannerDto.media?.FirstOrDefault();
             if (media == null)
                 return null;
 
-            var settings = banner.settings?.FirstOrDefault();
+            var settings = bannerDto.settings?.FirstOrDefault();
 
             return media.type switch
             {
                 IMAGE => new ImageBanner()
                 {
                     LocalPath = localPath,
-                    Id = banner.id,
-                    Title = banner.title,
-                    Description = banner.description,
-                    Url = banner.link,
+                    Id = bannerDto.id,
+                    Title = bannerDto.title,
+                    Description = bannerDto.description,
+                    Url = bannerDto.link,
                     Duration = settings?.duration ?? 5,
                 },
                 VIDEO => new VideoBanner()
                 {
                     LocalPath = localPath,
-                    Id = banner.id,
-                    Title = banner.title,
-                    Description = banner.description,
-                    Url = banner.link,
+                    Id = bannerDto.id,
+                    Title = bannerDto.title,
+                    Description = bannerDto.description,
+                    Url = bannerDto.link,
                     Duration = settings?.duration ?? 5,
                 },
                 _ => null
             };
         }
     }
-
-    /*private async UniTask<Texture2D> GetTexture(string url)
-    {
-        var textureResult = await _api.DownloadTexture(url);
-        var texture = textureResult.data;
-
-        if (!textureResult.isDone || texture == null)
-            return null;
-
-        return texture;
-    }*/
 }

@@ -16,14 +16,13 @@ namespace Plugins.RZDAds.ApiSystem
         {
             responseCode = (int)HttpStatus.ReadyToReceive;
 
-            var tempPath = $"{savePath}{TEMP_EXTENSION}";
 
-            if (File.Exists(tempPath))
-                File.Delete(tempPath);
 
             using var webRequest = UnityWebRequest.Get(url);
-            var downloadHandlerFile = new DownloadHandlerFile(tempPath);
-            downloadHandlerFile.removeFileOnAbort = true;
+            var downloadHandlerFile = new DownloadHandlerFile(savePath)
+            {
+                removeFileOnAbort = true
+            };
 
             webRequest.downloadHandler = downloadHandlerFile;
             webRequest.certificateHandler = new ForceAcceptAllCertificates();
@@ -39,12 +38,7 @@ namespace Plugins.RZDAds.ApiSystem
             progress?.Report(1f);
 
             responseCode = webRequest.responseCode;
-            if (webRequest.result != UnityWebRequest.Result.Success)
-                return false;
-            if (File.Exists(savePath))
-                File.Delete(savePath);
-            File.Move(tempPath, savePath);
-            return true;
+            return webRequest.result == UnityWebRequest.Result.Success;
         }
 
 

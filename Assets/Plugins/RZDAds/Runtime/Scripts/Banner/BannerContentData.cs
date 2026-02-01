@@ -1,4 +1,4 @@
-﻿namespace Plugins.RZDAds.Runtime.Scripts.BannerContentProvider
+﻿namespace Plugins.RZDAds.Runtime.Scripts.Banner
 {
     public class VideoBanner : BannerContent
     {

@@ -47,11 +47,11 @@ namespace Plugins.RZDAds.ApiSystem
     [Serializable]
     public class BannerData
     {
-        public Banner banner;
+        public BannerDto banner;
     }
 
     [Serializable]
-    public class Banner
+    public class BannerDto
     {
         public uint id;
         public string title;
@@ -74,6 +74,9 @@ namespace Plugins.RZDAds.ApiSystem
         public string url;
         public string type;
         public string mime_type;
+        public string hash;
+        public string ext;
+        public long filesize;
     }
 
 //--------------------Events-------------------------

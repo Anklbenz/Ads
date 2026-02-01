@@ -79,6 +79,11 @@ namespace Plugins.RZDAds.Runtime.Scripts.ApiSystem
         {
             return await GetTextureAsync(fromStaticUrl, progress);
         }
+        
+        public async UniTask<bool> DownloadFile(string fromStaticUrl, string toPath, IProgress<float> progress = null) {
+            return await GetFileAsync(fromStaticUrl, toPath, progress);
+        }
+
 
         private string Now() =>
             DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
