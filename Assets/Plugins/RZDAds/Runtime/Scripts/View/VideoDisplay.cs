@@ -30,7 +30,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             player.renderMode = VideoRenderMode.RenderTexture;
             player.waitForFirstFrame = true;
             
-            _rt = new RenderTexture(16, 16, 0, RenderTextureFormat.ARGB32);
+            _rt = new RenderTexture(1920, 1080, 0, RenderTextureFormat.ARGB32);
             _rt.Create();
 
             player.targetTexture = _rt;
@@ -91,18 +91,11 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 
             // правильный аспект
             aspect.aspectRatio = videoW / (float)videoH;
-
-            // ПЕРЕСОЗДАЁМ RT под реальное разрешение
-            player.targetTexture = null;
-
-            _rt.Release();
-            Destroy(_rt);
-
-            _rt = new RenderTexture(videoW, videoH, 0, RenderTextureFormat.ARGB32);
-            _rt.Create();
-
+            
             player.targetTexture = _rt;
             rawImage.texture = _rt;
+            
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
 
             player.Play();
 
