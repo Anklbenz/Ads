@@ -95,8 +95,6 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
             player.targetTexture = _rt;
             rawImage.texture = _rt;
             
-            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
-
             player.Play();
 
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);

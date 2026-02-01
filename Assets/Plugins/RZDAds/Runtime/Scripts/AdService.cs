@@ -25,7 +25,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
         private const string API_SETTINGS_RESOURCES_PATH = "ApiSettings";
 
         private static Api _api;
-        private static BannerFactory _bannerFactory;
+        private static ViewFactory _viewFactory;
         private static Authenticator _authenticator;
         private static BannerContentProvider _contentProvider;
         private static EventReporter _reporter;
@@ -36,7 +36,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
         private static AdServiceState _state = AdServiceState.None;
         public static AdServiceState State => _state;
-        private static bool _canShowState; 
+        private static bool _canShowState;
 
         // Метод нужно вызвать при старте клиентского приложения 
         // appToken - уникальный ключ игры, logRequired нужен ли лог
@@ -83,9 +83,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
                 _reporter = new EventReporter(_api, _logger);
 
                 // View
-                _bannerFactory = new BannerFactory();
-                _view = _bannerFactory.Get();
-                UnityEngine.Object.DontDestroyOnLoad(_view.gameObject);
+                _viewFactory = new ViewFactory();
 
                 //Попытка авторизоваться и подписать Api
                 var authorized = await _authenticator.Authorize();
@@ -97,7 +95,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
                     _ = RefreshCanShow();
                 }
 
-                if (_api == null || _view == null || _contentProvider == null)
+                if (_api == null  || _contentProvider == null)
                     throw new Exception("AdService initialization incomplete");
 
                 _state = AdServiceState.Initialized;
@@ -138,7 +136,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
                     return;
                 }
 
-                var canShow =  CanShowSync();
+                var canShow = CanShowSync();
                 if (!canShow)
                 {
                     _logger?.Log($"[Ads] Show rejected: \"Server didn't allow show\"");
@@ -152,6 +150,8 @@ namespace Plugins.RZDAds.Runtime.Scripts
                     _logger?.Log($"[Ads] Show rejected: \"Banner not ready yet\"");
                     return;
                 }
+
+                await RecreateView();
 
                 //Время нужно для сбора статистики
                 stopWatch.Start();
@@ -190,15 +190,18 @@ namespace Plugins.RZDAds.Runtime.Scripts
         // Проверка можно ли показать, сервер отвечает да/нет 
         private static async UniTask RefreshCanShow()
         {
-            try {
+            try
+            {
                 var check = await _api.CheckCanShow();
-                if (check.isDone) 
+                if (check.isDone)
                     _canShowState = check.data.data;
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 _logger?.Log($"[Ads] RefreshCanShow failed: {e}");
             }
         }
+
         private static bool CanShowSync()
         {
             if (_canShowState)
@@ -208,6 +211,19 @@ namespace Plugins.RZDAds.Runtime.Scripts
             }
 
             return false;
+        }
+        
+        private static async UniTask RecreateView()
+        {
+            if (_view != null)
+            {
+                UnityEngine.Object.Destroy(_view.gameObject);
+                _view = null;
+                await UniTask.DelayFrame(1);
+            }
+
+            _view = _viewFactory.Get();
+            UnityEngine.Object.DontDestroyOnLoad(_view.gameObject);
         }
 
         // Если надо завершить работу сервиса, очистить ресурсы
@@ -232,7 +248,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             _authenticator = null;
             _contentProvider = null;
             _reporter = null;
-            _bannerFactory = null;
+            _viewFactory = null;
 
             _isShowing = false;
         }

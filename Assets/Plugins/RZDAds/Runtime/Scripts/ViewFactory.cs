@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Plugins.RZDAds.Runtime.Scripts
 {
-    public class BannerFactory
+    public class ViewFactory
     {
         private const string VIEW_PATH = "AdBannerView";
 
