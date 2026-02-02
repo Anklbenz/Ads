@@ -95,7 +95,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
                     _ = RefreshCanShow();
                 }
 
-                if (_api == null  || _contentProvider == null)
+                if (_api == null || _contentProvider == null)
                     throw new Exception("AdService initialization incomplete");
 
                 _state = AdServiceState.Initialized;
@@ -153,6 +153,8 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
                 await RecreateView();
 
+                if (content.Id != 2)
+                    return;
                 //Время нужно для сбора статистики
                 stopWatch.Start();
                 var isClick = await _view.Show(content);
@@ -212,7 +214,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
             return false;
         }
-        
+
         private static async UniTask RecreateView()
         {
             if (_view != null)
