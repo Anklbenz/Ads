@@ -152,9 +152,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
                 }
 
                 await RecreateView();
-
-                if (content.Id != 2)
-                    return;
+                
                 //Время нужно для сбора статистики
                 stopWatch.Start();
                 var isClick = await _view.Show(content);
