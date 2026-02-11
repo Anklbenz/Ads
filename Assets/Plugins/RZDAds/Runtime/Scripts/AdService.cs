@@ -84,6 +84,8 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
                 // View
                 _viewFactory = new ViewFactory();
+                _view = _viewFactory.Get();
+                UnityEngine.Object.DontDestroyOnLoad(_view.gameObject);
 
                 //Попытка авторизоваться и подписать Api
                 var authorized = await _authenticator.Authorize();
@@ -102,7 +104,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             }
             catch (Exception e)
             {
-                _logger?.Log($"[Ads] Initialize failed: {e}");
+                Log($"[Ads] Initialize failed: {e}");
                 Cleanup();
                 _state = AdServiceState.Failed;
             }
@@ -110,16 +112,16 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
         public static async UniTask RequestShowAd()
         {
-            _logger?.Log($"[Ads] Show requested");
+            Log($"[Ads] Show requested");
             if (_state != AdServiceState.Initialized)
             {
-                _logger?.Log($"[Ads] Show rejected: \"State = {_state}\"");
+                Log($"[Ads] Show rejected: \"State = {_state}\"");
                 return;
             }
 
             if (_isShowing)
             {
-                _logger?.Log($"[Ads] Show rejected: \"Previous show request not complete\"");
+                Log($"[Ads] Show rejected: \"Previous show request not complete\"");
                 return;
             }
 
@@ -132,14 +134,14 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
                 if (!authorized)
                 {
-                    _logger?.Log($"[Ads] Show rejected: \"Not authorized\"");
+                    Log($"[Ads] Show rejected: \"Not authorized\"");
                     return;
                 }
 
                 var canShow = CanShowSync();
                 if (!canShow)
                 {
-                    _logger?.Log($"[Ads] Show rejected: \"Server didn't allow show\"");
+                    Log($"[Ads] Show rejected: \"Server didn't allow show\"");
                     return;
                 }
 
@@ -147,11 +149,9 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
                 if (content == null)
                 {
-                    _logger?.Log($"[Ads] Show rejected: \"Banner not ready yet\"");
+                    Log($"[Ads] Show rejected: \"Banner not ready yet\"");
                     return;
                 }
-
-                await RecreateView();
                 
                 //Время нужно для сбора статистики
                 stopWatch.Start();
@@ -198,7 +198,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             }
             catch (Exception e)
             {
-                _logger?.Log($"[Ads] RefreshCanShow failed: {e}");
+                Log($"[Ads] RefreshCanShow failed: {e}");
             }
         }
 
@@ -213,19 +213,6 @@ namespace Plugins.RZDAds.Runtime.Scripts
             return false;
         }
 
-        private static async UniTask RecreateView()
-        {
-            if (_view != null)
-            {
-                UnityEngine.Object.Destroy(_view.gameObject);
-                _view = null;
-                await UniTask.DelayFrame(1);
-            }
-
-            _view = _viewFactory.Get();
-            UnityEngine.Object.DontDestroyOnLoad(_view.gameObject);
-        }
-
         // Если надо завершить работу сервиса, очистить ресурсы
         public static void Dispose()
         {
@@ -235,7 +222,7 @@ namespace Plugins.RZDAds.Runtime.Scripts
             Cleanup();
 
             _state = AdServiceState.Disposed;
-            _logger?.Log("AdService disposed");
+            Log("AdService disposed");
         }
 
         private static void Cleanup()
@@ -252,5 +239,8 @@ namespace Plugins.RZDAds.Runtime.Scripts
 
             _isShowing = false;
         }
+
+        private static void Log(string msg) =>
+            _logger?.Log(msg);
     }
 }

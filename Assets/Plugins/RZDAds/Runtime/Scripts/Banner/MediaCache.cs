@@ -32,24 +32,17 @@ namespace Plugins.RZDAds.Runtime.Scripts.Banner
 
             if (File.Exists(path))
             {
-                _logger.Log($"fileName{fileName}, exists");
+                Log($"fileName{fileName}, exists");
                 return path;
             }
-
-            IProgress<float> progress = null;
-
-            if (_logger != null)
-            {
-                _logger.Log($"Downloading {data.url}");
-                progress = new Progress<float>(p => _logger.Log($"Progress {p}%"));
-            }
-
+            
             var tempPath = $"{path}.tmp";
+            Log($"Downloading {data.url} to {tempPath}");
 
             if (File.Exists(tempPath))
                 File.Delete(tempPath);
 
-            var isOk = await _api.GetFileAsync(data.url, tempPath, progress);
+            var isOk = await _api.GetFileAsync(data.url, tempPath);
 
             if (!isOk)
             {
@@ -60,5 +53,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.Banner
             File.Move(tempPath, path);
             return path;
         }
+        private void Log(string msg) => 
+            _logger?.Log(msg);
     }
 }

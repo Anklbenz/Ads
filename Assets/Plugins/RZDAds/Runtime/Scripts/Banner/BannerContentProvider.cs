@@ -40,7 +40,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.Banner
             if (_isInitialized)
                 return;
             _isInitialized = true;
-            Prewarm().Forget();
+            Prewarm().Forget(Log);
         }
 
         public BannerContent TakeBanner()
@@ -49,7 +49,7 @@ namespace Plugins.RZDAds.Runtime.Scripts.Banner
             // Если банера нет, то return null
             _prepared.TryDequeue(out var content);
 
-            Prewarm().Forget();
+            Prewarm().Forget(Log);
 
             return content;
         }
@@ -115,13 +115,19 @@ namespace Plugins.RZDAds.Runtime.Scripts.Banner
             }
             catch (Exception e)
             {
-                _logger?.Log($"[ContentProvider] LoadNext exception: {e}");
+                Log($"[ContentProvider] LoadNext exception: {e}");
             }
             finally
             {
                 _isLoading = false;
             }
         }
+
+        private void Log(Exception ex) =>
+            _logger?.Log(ex.Message);
+
+        private void Log(string msg) =>
+            _logger?.Log(msg);
     }
 
     public static class ContentFactory

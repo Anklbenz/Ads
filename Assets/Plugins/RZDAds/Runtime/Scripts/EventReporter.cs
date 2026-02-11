@@ -26,12 +26,15 @@ namespace Plugins.RZDAds.Runtime.Scripts
             try
             {
                 var result = await _api.ReportEvent(id, type, duration);
-                _logger?.Log($"[Reporter] Action [{type}] id=({id}) sendOk=({result.isDone})");
+                Log($"[Reporter] Action [{type}] id=({id}) sendOk=({result.isDone})");
             }
             catch (Exception e)
             {
-                _logger?.Log($"[Reporter] Action [{type}] id=({id}) error: {e}");
+                Log($"[Reporter] Action [{type}] id=({id}) error: {e}");
             }
         }
+
+        private void Log(string msg) =>
+            _logger?.Log(msg);
     }
 }

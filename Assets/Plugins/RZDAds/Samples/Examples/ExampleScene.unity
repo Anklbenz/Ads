@@ -154,6 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   button: {fileID: 1668819561}
   appKey: 23e2e53f-e1b8-4b29-8fd6-cb25420696e3
+  isLogRequired: 0
 --- !u!4 &434834924
 Transform:
   m_ObjectHideFlags: 0

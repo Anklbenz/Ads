@@ -9,10 +9,11 @@ public class Example : MonoBehaviour
 {
     [SerializeField] private Button button;
     [SerializeField] private string appKey;
+    [SerializeField] private bool isLogRequired;
 
     private void Awake()
     {
-        AdService.Initialize(appKey, true).Forget();
+        AdService.Initialize(appKey, isLogRequired).Forget();
         button.onClick.AddListener(Show);
     }
 
