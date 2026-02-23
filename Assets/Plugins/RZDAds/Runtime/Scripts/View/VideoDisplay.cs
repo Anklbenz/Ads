@@ -138,6 +138,9 @@ namespace Plugins.RZDAds.Runtime.Scripts.View
 
         private void OnEnable()
         {
+            //Придурки в играх бывают подписываться на все кнопки в FindObjectByType
+            muteButton.onClick.RemoveAllListeners();
+            
             muteButton.onClick.AddListener(ToggleMuted);
         }
 
